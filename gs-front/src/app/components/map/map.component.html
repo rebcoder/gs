@@ -1,0 +1,31 @@
+<div class="map-container">
+  <div class="map-header">
+    <h1>Garage Sale Map</h1>
+    <p>Find garage sales near you on an interactive map</p>
+  </div>
+
+  <div class="map-content">
+    <div class="map-placeholder">
+      <mat-icon class="map-icon">map</mat-icon>
+      <h3>Interactive Map Coming Soon</h3>
+      <p>This will show an interactive map with garage sale locations marked with pins.</p>
+      <p>Users will be able to click on pins to see sale details and book appointments.</p>
+    </div>
+
+    <div class="map-sidebar">
+      <h3>Nearby Sales</h3>
+      <div class="sales-list">
+        <div class="sale-item" *ngFor="let sale of garageSales">
+          <div class="sale-info">
+            <h4>{{sale.title}}</h4>
+            <p class="location">{{sale.location}}</p>
+            <p class="date-time">{{sale.date}} • {{sale.time}}</p>
+          </div>
+          <button class="view-btn">
+            <mat-icon>visibility</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

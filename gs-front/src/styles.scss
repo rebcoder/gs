@@ -1,0 +1,204 @@
+:root {
+  --primary-color: #ff5a5f;
+  --secondary-color: #11a38e;
+  --accent-color: #f59e0b;
+  --success-color: #0f766e;
+  --warning-color: #d97706;
+  --error-color: #dc2626;
+  --info-color: #475569;
+
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-light: #9ca3af;
+
+  --background-white: #ffffff;
+  --background-light: #f8fafc;
+  --background-gray: #f1f5f9;
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 4px 10px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 20px 45px rgba(15, 23, 42, 0.16);
+  --shadow-xl: 0 28px 60px rgba(15, 23, 42, 0.2);
+
+  --border-radius-xs: 4px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  --font-family-primary: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-family-display: 'Fraunces', Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-primary);
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 90, 95, 0.1), transparent 28%),
+    radial-gradient(circle at 88% 8%, rgba(17, 163, 142, 0.1), transparent 24%),
+    linear-gradient(180deg, #fffefc 0%, #f7fafc 45%, #f3f7fb 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
+.icon-xs {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.icon-sm {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.icon-md {
+  font-size: 24px !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.icon-lg {
+  font-size: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.icon-xl {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.icon-primary {
+  color: var(--primary-color) !important;
+}
+
+.icon-secondary {
+  color: var(--secondary-color) !important;
+}
+
+.icon-accent {
+  color: var(--accent-color) !important;
+}
+
+.icon-white {
+  color: #fff !important;
+}
+
+@keyframes fadeInRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes softFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.icon-bounce {
+  animation: softFloat 3.2s ease-in-out infinite;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eaf0f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff5a5f 0%, #11a38e 100%);
+  border-radius: 100px;
+}
+
+.success-snackbar {
+  background-color: var(--success-color) !important;
+  color: #fff !important;
+}
+
+.error-snackbar {
+  background-color: var(--error-color) !important;
+  color: #fff !important;
+}
+
+.warning-snackbar {
+  background-color: var(--warning-color) !important;
+  color: #fff !important;
+}
+
+.info-snackbar {
+  background-color: #0f172a !important;
+  color: #fff !important;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+}

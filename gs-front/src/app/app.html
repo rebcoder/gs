@@ -1,0 +1,139 @@
+<div class="gs-root">
+  <div class="orb orb-left" aria-hidden="true"></div>
+  <div class="orb orb-right" aria-hidden="true"></div>
+
+  <header class="gs-topbar">
+    <button class="brand" (click)="onLogoClick()" type="button" aria-label="Go home">
+      <span class="brand-mark">
+        <mat-icon>storefront</mat-icon>
+      </span>
+      <span class="brand-text">
+        <strong>GarageSale</strong>
+        <small>Neighborhood Marketplace</small>
+      </span>
+    </button>
+
+    <nav class="top-nav">
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+      <a routerLink="/browse" routerLinkActive="active">Browse</a>
+      <a routerLink="/map" routerLinkActive="active">Map</a>
+    </nav>
+
+    <div class="search-strip" role="search">
+      <input
+        type="text"
+        [(ngModel)]="locationQuery"
+        placeholder="City or area"
+        aria-label="Search location"
+      />
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Items, categories, keywords"
+        aria-label="Search keywords"
+      />
+      <button class="action action-primary" (click)="onSearch()" type="button">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+    </div>
+
+    <div class="auth-box">
+      <ng-container *ngIf="!isLoggedIn(); else loggedInMenu">
+        <a class="action action-muted" routerLink="/login">Login</a>
+        <a class="action action-primary" routerLink="/register">Register</a>
+      </ng-container>
+
+      <ng-template #loggedInMenu>
+        <button class="profile-trigger" [matMenuTriggerFor]="userMenuTrigger">
+          <mat-icon>account_circle</mat-icon>
+          <span>{{ currentUsername() || 'Account' }}</span>
+        </button>
+        <mat-menu #userMenuTrigger="matMenu">
+          <button mat-menu-item routerLink="/profile">
+            <mat-icon>person</mat-icon>
+            Profile
+          </button>
+          <button mat-menu-item routerLink="/appointments">
+            <mat-icon>event</mat-icon>
+            Appointments
+          </button>
+          <button mat-menu-item routerLink="/my-sales">
+            <mat-icon>store</mat-icon>
+            My Sales
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Logout
+          </button>
+          <button mat-menu-item *ngIf="hostname === 'localhost'" (click)="clearDemo()">
+            <mat-icon>delete_sweep</mat-icon>
+            Clear Demo Data
+          </button>
+        </mat-menu>
+      </ng-template>
+    </div>
+  </header>
+
+  <main class="gs-main">
+    <aside class="gs-rail">
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <mat-icon>home</mat-icon>
+        <span>Home</span>
+      </a>
+      <a routerLink="/browse" routerLinkActive="active">
+        <mat-icon>search</mat-icon>
+        <span>Browse</span>
+      </a>
+      <a routerLink="/map" routerLinkActive="active">
+        <mat-icon>map</mat-icon>
+        <span>Map</span>
+      </a>
+      <a routerLink="/appointments" routerLinkActive="active" *ngIf="isLoggedIn()">
+        <mat-icon>event</mat-icon>
+        <span>Appointments</span>
+      </a>
+      <a routerLink="/my-sales" routerLinkActive="active" *ngIf="isLoggedIn()">
+        <mat-icon>inventory_2</mat-icon>
+        <span>My Sales</span>
+      </a>
+      <a routerLink="/profile" routerLinkActive="active" *ngIf="isLoggedIn()">
+        <mat-icon>badge</mat-icon>
+        <span>Profile</span>
+      </a>
+
+      <a class="action action-primary rail-cta" routerLink="/create-sale" *ngIf="isLoggedIn()">
+        <mat-icon>add_circle</mat-icon>
+        Create Sale
+      </a>
+    </aside>
+
+    <section class="gs-canvas">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+
+  <nav class="mobile-dock">
+    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+      <mat-icon>home</mat-icon>
+      <span>Home</span>
+    </a>
+    <a routerLink="/browse" routerLinkActive="active">
+      <mat-icon>search</mat-icon>
+      <span>Browse</span>
+    </a>
+    <a routerLink="/map" routerLinkActive="active">
+      <mat-icon>map</mat-icon>
+      <span>Map</span>
+    </a>
+    <a routerLink="/create-sale" routerLinkActive="active" *ngIf="isLoggedIn()">
+      <mat-icon>add_circle</mat-icon>
+      <span>Create</span>
+    </a>
+    <a routerLink="/profile" routerLinkActive="active" *ngIf="isLoggedIn()">
+      <mat-icon>person</mat-icon>
+      <span>Profile</span>
+    </a>
+  </nav>
+</div>

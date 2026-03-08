@@ -1,0 +1,9 @@
+services:
+  gs-back:
+    build:
+      context: ./gs-back
+      dockerfile: Dockerfile
+    container_name: gs-back
+    ports:
+      - "8081:8081"
+    restart: unless-stopped

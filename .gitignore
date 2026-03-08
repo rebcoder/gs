@@ -1,0 +1,19 @@
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Frontend artifacts
+gs-front/node_modules/
+gs-front/dist/
+gs-front/.angular/
+gs-front/coverage/
+
+# Backend artifacts
+gs-back/target/
+
+# Logs / temp
+*.log
+*.pid
+tmp/
+*.tmp

@@ -1,0 +1,163 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-section">
+        <mat-icon class="logo-icon">home</mat-icon>
+        <h1>GarageSale</h1>
+      </div>
+      <h2>Welcome Back</h2>
+      <p>Sign in to your account to continue</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username" type="text" placeholder="Enter your username">
+        <mat-icon matSuffix>person</mat-icon>
+        <mat-error *ngIf="loginForm.get('username')?.invalid">
+          {{getErrorMessage('username')}}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Enter your password">
+        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.invalid">
+          {{getErrorMessage('password')}}
+        </mat-error>
+      </mat-form-field>
+
+      <div class="form-options">
+        <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
+        <a href="#" class="forgot-password">Forgot password?</a>
+      </div>
+
+      <button type="submit" mat-raised-button color="primary" class="login-button" [disabled]="loginForm.invalid || isLoading">
+        <mat-icon *ngIf="!isLoading">login</mat-icon>
+        <mat-icon *ngIf="isLoading" class="loading-icon">hourglass_empty</mat-icon>
+        {{isLoading ? 'Signing In...' : 'Sign In'}}
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Don't have an account? <a routerLink="/register">Sign up</a></p>
+    </div>
+
+    <div class="social-login">
+      <p class="divider">Or continue with</p>
+      <div class="social-buttons">
+        <button mat-stroked-button class="social-btn google">
+          <mat-icon>google</mat-icon>
+          Google
+        </button>
+        <button mat-stroked-button class="social-btn facebook">
+          <mat-icon>facebook</mat-icon>
+          Facebook
+        </button>
+      </div>
+    </div>
+
+    <!-- Demo Credentials Section -->
+    <div class="demo-credentials" *ngIf="!isLoading">
+      <mat-card class="demo-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>rocket_launch</mat-icon>
+            Quick Start - Demo Accounts
+          </mat-card-title>
+          <mat-card-subtitle>Try the app instantly with these pre-created demo accounts</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="demo-users-grid">
+            <div class="demo-user-card">
+              <div class="demo-user-header">
+                <mat-icon class="user-icon primary-icon">person</mat-icon>
+                <h4>Demo User 1</h4>
+              </div>
+              <div class="demo-credentials-display">
+                <div class="credential-item">
+                  <span class="label">Username:</span>
+                  <code class="value">demo_user</code>
+                </div>
+                <div class="credential-item">
+                  <span class="label">Password:</span>
+                  <code class="value">demo123</code>
+                </div>
+              </div>
+              <p class="demo-description">
+                <mat-icon>info</mat-icon>
+                Full access to all features - create sales, browse items, book appointments
+              </p>
+              <button mat-raised-button color="primary" (click)="demoLogin('user')" class="demo-login-btn">
+                <mat-icon>login</mat-icon>
+                Login as Demo User
+              </button>
+            </div>
+
+            <div class="demo-user-card">
+              <div class="demo-user-header">
+                <mat-icon class="user-icon accent-icon">person</mat-icon>
+                <h4>Demo User 2</h4>
+              </div>
+              <div class="demo-credentials-display">
+                <div class="credential-item">
+                  <span class="label">Username:</span>
+                  <code class="value">demo_user2</code>
+                </div>
+                <div class="credential-item">
+                  <span class="label">Password:</span>
+                  <code class="value">demo123</code>
+                </div>
+              </div>
+              <p class="demo-description">
+                <mat-icon>info</mat-icon>
+                Full access to all features - explore sales, create your own, manage appointments
+              </p>
+              <button mat-raised-button color="accent" (click)="demoLogin('user2')" class="demo-login-btn">
+                <mat-icon>login</mat-icon>
+                Login as Demo User 2
+              </button>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="demo-features">
+            <h4><mat-icon>stars</mat-icon> What you can do as a user:</h4>
+            <div class="features-grid">
+              <div class="feature-item">
+                <mat-icon>search</mat-icon>
+                <span>Browse garage sales</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>add_circle</mat-icon>
+                <span>Create your own sales</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>event</mat-icon>
+                <span>Book appointments</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>manage_accounts</mat-icon>
+                <span>Manage your profile</span>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="create-account-hint">
+            <p>
+              <mat-icon>person_add</mat-icon>
+              Want to create your own account?
+              <a routerLink="/register">Sign up here</a>
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

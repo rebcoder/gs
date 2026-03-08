@@ -1,0 +1,163 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <div class="logo-section">
+        <mat-icon class="logo-icon">home</mat-icon>
+        <h1>GarageSale</h1>
+      </div>
+      <h2>Create Account</h2>
+      <p>Join our community of garage sale enthusiasts</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName" placeholder="Enter your first name">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="registerForm.get('firstName')?.invalid">
+            {{getErrorMessage('firstName')}}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName" placeholder="Enter your last name">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="registerForm.get('lastName')?.invalid">
+            {{getErrorMessage('lastName')}}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email" placeholder="Enter your email">
+        <mat-icon matSuffix>email</mat-icon>
+        <mat-error *ngIf="registerForm.get('email')?.invalid">
+          {{getErrorMessage('email')}}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Phone Number</mat-label>
+        <input matInput formControlName="phone" placeholder="Enter your phone number">
+        <mat-icon matSuffix>phone</mat-icon>
+        <mat-error *ngIf="registerForm.get('phone')?.invalid">
+          {{getErrorMessage('phone')}}
+        </mat-error>
+      </mat-form-field>
+
+
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Create a password">
+          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+          <mat-error *ngIf="registerForm.get('password')?.invalid">
+            {{getErrorMessage('password')}}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Confirm Password</mat-label>
+          <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword" placeholder="Confirm your password">
+          <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
+            <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+          <mat-error *ngIf="registerForm.get('confirmPassword')?.invalid">
+            {{getErrorMessage('confirmPassword')}}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-options">
+        <mat-checkbox formControlName="agreeToTerms" required>
+          I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>
+        </mat-checkbox>
+      </div>
+
+      <button type="submit" mat-raised-button color="primary" class="register-button" [disabled]="registerForm.invalid || isLoading">
+        <mat-icon *ngIf="!isLoading">person_add</mat-icon>
+        <mat-icon *ngIf="isLoading" class="loading-icon">hourglass_empty</mat-icon>
+        {{isLoading ? 'Creating Account...' : 'Create Account'}}
+      </button>
+    </form>
+
+    <div class="register-footer">
+      <p>Already have an account? <a routerLink="/login">Sign in</a></p>
+    </div>
+
+    <!-- Demo Credentials Section -->
+    <div class="demo-credentials" *ngIf="!isLoading">
+      <mat-card class="demo-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>info</mat-icon>
+            Demo Credentials
+          </mat-card-title>
+          <mat-card-subtitle>Try the app with these pre-created demo accounts</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="demo-users">
+            <div class="demo-user">
+              <h4><mat-icon class="primary-icon">person</mat-icon> Demo User 1</h4>
+              <div class="credentials">
+                <p><strong>Username:</strong> <code>demo_user</code></p>
+                <p><strong>Password:</strong> <code>demo123</code></p>
+              </div>
+              <p class="description">Full access to all platform features</p>
+              <button mat-stroked-button color="primary" routerLink="/login" (click)="fillDemoCredentials('user')">
+                <mat-icon>login</mat-icon>
+                Try Demo User 1
+              </button>
+            </div>
+
+            <div class="demo-user">
+              <h4><mat-icon class="accent-icon">person</mat-icon> Demo User 2</h4>
+              <div class="credentials">
+                <p><strong>Username:</strong> <code>demo_user2</code></p>
+                <p><strong>Password:</strong> <code>demo123</code></p>
+              </div>
+              <p class="description">Full access to all platform features</p>
+              <button mat-stroked-button color="accent" routerLink="/login" (click)="fillDemoCredentials('user2')">
+                <mat-icon>login</mat-icon>
+                Try Demo User 2
+              </button>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="demo-info">
+            <h4><mat-icon>stars</mat-icon> What you can do as a user:</h4>
+            <ul>
+              <li>Demo accounts are automatically available when you start the app</li>
+              <li>All users can create garage sales and browse existing ones</li>
+              <li>Book appointments with any other user who has sales</li>
+              <li>Manage your profile and view your appointment history</li>
+              <li>No restrictions - explore all features with either account</li>
+            </ul>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="social-login">
+      <p class="divider">Or sign up with</p>
+      <div class="social-buttons">
+        <button mat-stroked-button class="social-btn google">
+          <mat-icon>google</mat-icon>
+          Google
+        </button>
+        <button mat-stroked-button class="social-btn facebook">
+          <mat-icon>facebook</mat-icon>
+          Facebook
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

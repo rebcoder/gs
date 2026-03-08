@@ -1,0 +1,129 @@
+<!-- Loading State -->
+<app-loading
+  *ngIf="!sale"
+  message="Loading sale details..."
+  subtitle="Fetching information about this garage sale"
+  icon="store"
+  size="medium">
+</app-loading>
+
+<!-- Sale Details -->
+<div class="sale-detail-container" *ngIf="sale">
+  <!-- Sale Header -->
+  <div class="sale-header">
+    <div class="sale-title-section">
+      <h1 class="sale-title">{{sale.saleName || sale.sale_name}}</h1>
+      <div class="sale-meta">
+        <mat-chip class="location-chip" selected>
+          <mat-icon>location_on</mat-icon>
+          {{sale.area}}, {{sale.city}}
+        </mat-chip>
+        <mat-chip class="distance-chip" selected *ngIf="sale.latitude && sale.longitude">
+          <mat-icon>map</mat-icon>
+          {{calculateDistance(sale.latitude, sale.longitude)}} km away
+        </mat-chip>
+      </div>
+    </div>
+    <div class="sale-actions">
+      <button mat-raised-button color="accent" (click)="book()">
+        <mat-icon>schedule</mat-icon>
+        Book Appointment
+      </button>
+    </div>
+  </div>
+
+  <!-- Sale Description -->
+  <mat-card class="sale-description-card">
+    <mat-card-content>
+      <h3>About This Sale</h3>
+      <p>{{sale.description}}</p>
+      <div class="sale-stats" *ngIf="sale.items && sale.items.length">
+        <div class="stat-item">
+          <mat-icon>inventory</mat-icon>
+          <span>{{sale.items.length}} items available</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Items Section -->
+  <div class="items-section" *ngIf="sale.items && sale.items.length">
+    <h2>Available Items</h2>
+    <div class="items-grid">
+      <mat-card class="item-card" *ngFor="let item of sale.items">
+        <mat-card-content>
+          <div class="item-header">
+            <h3 class="item-name">{{item.name}}</h3>
+            <div class="item-price">\${{item.price}}</div>
+          </div>
+          <div class="item-details">
+            <mat-chip [class]="'category-' + item.category.toLowerCase()" selected>
+              {{formatCategory(item.category)}}
+            </mat-chip>
+            <p class="item-description" *ngIf="item.description">{{item.description}}</p>
+            <div class="item-meta" *ngIf="item.condition || item.brand">
+              <span *ngIf="item.condition">Condition: {{item.condition}}</span>
+              <span *ngIf="item.brand && item.condition"> • </span>
+              <span *ngIf="item.brand">Brand: {{item.brand}}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- No Items Message -->
+  <div class="no-items" *ngIf="!sale.items || sale.items.length === 0">
+    <mat-icon>inventory_2</mat-icon>
+    <h3>No items listed yet</h3>
+    <p>The seller hasn't added any items to this sale yet. Check back later!</p>
+  </div>
+
+  <!-- Add Item Form (for sellers) -->
+  <mat-card class="add-item-card" *ngIf="canManageSale()">
+    <mat-card-header>
+      <mat-card-title>Add New Item</mat-card-title>
+      <mat-card-subtitle>Expand your garage sale inventory</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="itemForm" (ngSubmit)="addItem()" class="add-item-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Item Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g., Vintage Chair">
+            <mat-icon matSuffix>label</mat-icon>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Price ($)</mat-label>
+            <input matInput type="number" formControlName="price" placeholder="25.00">
+            <mat-icon matSuffix>attach_money</mat-icon>
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category">
+              <mat-option value="FURNITURE">Furniture</mat-option>
+              <mat-option value="ELECTRONICS">Electronics</mat-option>
+              <mat-option value="CLOTHING">Clothing</mat-option>
+              <mat-option value="HOME_DECOR">Home Decor</mat-option>
+              <mat-option value="KITCHEN_APPLIANCES">Kitchen Appliances</mat-option>
+              <mat-option value="BOOKS">Books</mat-option>
+              <mat-option value="SPORTS_EQUIPMENT">Sports Equipment</mat-option>
+              <mat-option value="COLLECTIBLES">Collectibles</mat-option>
+              <mat-option value="ANTIQUES">Antiques</mat-option>
+              <mat-option value="OTHER">Other</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit"
+                    [disabled]="itemForm.invalid || isAdding">
+              <mat-icon>add</mat-icon>
+              {{isAdding ? 'Adding...' : 'Add Item'}}
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
