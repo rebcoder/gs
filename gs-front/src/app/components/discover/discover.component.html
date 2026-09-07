@@ -1,0 +1,147 @@
+<section class="section-space space-y-6 pb-4">
+  <header class="discover-hero overflow-hidden px-6 py-8 sm:px-8">
+    <p class="discover-eyebrow text-xs font-semibold uppercase tracking-[0.16em]">Marketplace Discovery</p>
+    <h1 class="mt-2 text-h1">Find garage sales like a local</h1>
+    <p class="mt-2 max-w-2xl text-body">Search by item, area, distance, and price. Browse map and listings side by side.</p>
+
+    <div class="mt-6 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+      <label class="block">
+        <span class="sr-only">Search garage sales</span>
+        <div class="discover-search-pill">
+          <mat-icon class="discover-search-icon">search</mat-icon>
+          <input
+            type="text"
+            class="discover-search-input"
+            [(ngModel)]="filters.query"
+            placeholder="Search garage sales or items"
+            (keyup.enter)="onSearch()" />
+        </div>
+      </label>
+      <button type="button" class="btn-secondary hidden md:inline-flex" (click)="clearFilters()">Reset</button>
+      <button type="button" class="btn-primary" (click)="onSearch()">Search</button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <button
+        *ngFor="let dateOption of dateOptions"
+        type="button"
+        class="filter-pill"
+        [class.active]="filters.date === dateOption.key"
+        (click)="onDateFilterChange(dateOption.key)">
+        {{ dateOption.label }}
+      </button>
+
+      <button type="button" class="filter-pill" [class.active]="filters.distanceKm === null" (click)="onDistanceFilterChange(null)">
+        Any Distance
+      </button>
+      <button
+        *ngFor="let distance of distanceOptions"
+        type="button"
+        class="filter-pill"
+        [class.active]="filters.distanceKm === distance"
+        (click)="onDistanceFilterChange(distance)">
+        {{ distance }} km
+      </button>
+
+      <button type="button" class="filter-pill md:hidden" (click)="openMobileFilters()">
+        <mat-icon class="!h-4 !w-4 !text-base">tune</mat-icon>
+        More Filters
+      </button>
+    </div>
+
+    <div class="mt-3 hidden items-center gap-3 md:flex">
+      <label class="w-full max-w-[220px]">
+        <span class="discover-label mb-1 block text-xs font-semibold uppercase tracking-[0.12em]">Category</span>
+        <select class="input-modern" [(ngModel)]="filters.category" (change)="onCategoryFilterChange(filters.category)">
+          <option [ngValue]="null">All categories</option>
+          <option *ngFor="let category of categories" [ngValue]="category">{{ category }}</option>
+        </select>
+      </label>
+
+      <label class="w-[150px]">
+        <span class="discover-label mb-1 block text-xs font-semibold uppercase tracking-[0.12em]">Min price</span>
+        <input type="number" class="input-modern" [(ngModel)]="filters.minPrice" />
+      </label>
+
+      <label class="w-[150px]">
+        <span class="discover-label mb-1 block text-xs font-semibold uppercase tracking-[0.12em]">Max price</span>
+        <input type="number" class="input-modern" [(ngModel)]="filters.maxPrice" />
+      </label>
+
+      <button type="button" class="btn-secondary mt-5" (click)="applyAdvancedFilters()">Apply</button>
+    </div>
+  </header>
+
+  <div class="discover-layout grid gap-5 xl:grid-cols-[1fr_0.95fr]">
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-h2">Discover Sales</h2>
+        <p class="discover-label-muted text-sm">{{ filteredSales.length }} matches</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5" *ngIf="loading">
+        <app-sale-card-skeleton *ngFor="let skeleton of [1,2,3,4,5,6]"></app-sale-card-skeleton>
+      </div>
+
+      <div class="space-y-4" *ngIf="!loading && visibleSales.length">
+        <div
+          *ngFor="let sale of visibleSales; trackBy: trackBySaleId"
+          #saleCardElement
+          [attr.id]="'discover-sale-' + sale.id"
+          class="rounded-xl transition"
+          [class.discover-sale-selected]="selectedSaleId === sale.id"
+          (mouseenter)="onCardHover(sale.id)"
+          (mouseleave)="onCardHover(null)">
+          <app-sale-card
+            [saleId]="sale.id"
+            [title]="sale.title"
+            [date]="sale.date"
+            [time]="sale.timeLabel"
+            [location]="sale.locationLabel"
+            [description]="sale.description"
+            [imageUrl]="sale.imageUrl"
+            [topItems]="sale.topItems"
+            [distanceKm]="sale.distanceKm"
+            [saved]="isSaved(sale.id)"
+            [showBook]="false"
+            (saveToggle)="toggleSavedSale($event)"
+            (cardHovered)="onCardHover($event ? sale.id : null)">
+          </app-sale-card>
+        </div>
+      </div>
+
+      <app-empty-state
+        *ngIf="!loading && filteredSales.length === 0"
+        icon="travel_explore"
+        title="No sales found"
+        message="Try changing date, distance, or category filters.">
+      </app-empty-state>
+
+      <div #loadTrigger class="h-8" aria-hidden="true"></div>
+
+      <div class="flex justify-center" *ngIf="loadingMore">
+        <p class="discover-loading-pill px-4 py-2 text-xs font-semibold">Loading more...</p>
+      </div>
+    </div>
+
+    <aside class="map-panel" [class.mobile-open]="mobileMapOpen">
+      <div class="map-panel-header flex items-center justify-between px-4 py-3">
+        <h3 class="text-sm font-semibold">Map View</h3>
+        <button type="button" class="btn-secondary md:hidden" (click)="closeMobileMap()">
+          <mat-icon class="!h-4 !w-4 !text-base">close</mat-icon>
+          Close
+        </button>
+      </div>
+
+      <div #mapHost id="discover-map" class="h-[68vh] min-h-[420px] w-full"></div>
+    </aside>
+  </div>
+</section>
+
+<button
+  type="button"
+  class="discover-map-fab fixed bottom-20 right-5 z-40 inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white md:hidden"
+  (click)="openMobileMap()">
+  <mat-icon class="!h-4 !w-4 !text-base">map</mat-icon>
+  Map
+</button>

@@ -83,7 +83,9 @@ export class RegisterComponent {
         password,
         firstName,
         lastName,
-        phone
+        // Backend's UserRegistrationDto field is `phoneNumber`, not `phone` - a mismatch here
+        // silently drops the value (Jackson matches by name, no error on an unknown JSON field).
+        phoneNumber: phone
       };
 
       this.authService.register(registerData).subscribe({
@@ -109,12 +111,6 @@ export class RegisterComponent {
         panelClass: ['warning-snackbar']
       });
     }
-  }
-
-  // Navigate to login with demo credentials hint
-  fillDemoCredentials(type: 'user' | 'user2') {
-    // This will be handled by routerLink navigation
-    // The login component will handle the actual credential filling
   }
 
   getErrorMessage(field: string): string {

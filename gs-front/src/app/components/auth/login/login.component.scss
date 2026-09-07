@@ -4,19 +4,19 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .login-card {
-  background: white;
-  border-radius: 24px;
+  background: var(--background-white);
+  border-radius: var(--border-radius-xl);
   padding: 48px;
   width: 100%;
   max-width: 450px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -24,45 +24,45 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   }
 }
 
 .login-header {
   text-align: center;
   margin-bottom: 40px;
-  
+
   .logo-section {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
     margin-bottom: 24px;
-    
+
     .logo-icon {
       font-size: 32px;
       width: 32px;
       height: 32px;
-      color: #667eea;
+      color: var(--primary-color);
     }
-    
+
     h1 {
       font-size: 24px;
       font-weight: 700;
-      color: #2c3e50;
+      color: var(--text-primary);
       margin: 0;
     }
   }
-  
+
   h2 {
     font-size: 2rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 12px;
   }
-  
+
   p {
-    color: #666;
+    color: var(--text-secondary);
     margin: 0;
     font-size: 1rem;
   }
@@ -73,26 +73,26 @@
   flex-direction: column;
   gap: 24px;
   margin-bottom: 32px;
-  
+
   mat-form-field {
     width: 100%;
-    
+
     ::ng-deep .mat-mdc-form-field {
       .mat-mdc-form-field-flex {
-        background-color: #f8f9fa;
-        border-radius: 12px;
+        background-color: var(--background-light);
+        border-radius: var(--border-radius-md);
         transition: all 0.3s ease;
       }
-      
+
       &.mat-focused .mat-mdc-form-field-flex {
-        background-color: white;
-        box-shadow: 0 0 0 2px #667eea;
+        background-color: var(--background-white);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
       }
-      
+
       .mat-mdc-form-field-outline {
         border: none;
       }
-      
+
       .mat-mdc-form-field-outline-thick {
         border: none;
       }
@@ -105,24 +105,23 @@
   justify-content: space-between;
   align-items: center;
   margin-top: -8px;
-  
+
   ::ng-deep .mat-checkbox {
     .mat-checkbox-label {
-      color: #666;
+      color: var(--text-secondary);
       font-size: 0.9rem;
     }
   }
-  
+
   .forgot-password {
-    color: #667eea;
+    color: var(--text-light);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
     transition: color 0.3s ease;
-    
+
     &:hover {
-      color: #5a6fd8;
-      text-decoration: underline;
+      color: var(--text-secondary);
     }
   }
 }
@@ -134,22 +133,29 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--border-radius-md);
+  // Angular Material's M3 "elevated" style for mat-raised-button + color="primary"
+  // renders a pale surface-tinted background with primary-colored text by default,
+  // which out-specifies a plain class selector -- !important pins it to a solid,
+  // clearly-enabled coral button (same pattern used for Material overrides in
+  // src/styles.scss, e.g. .icon-primary).
+  background: var(--primary-color) !important;
+  color: #fff !important;
   border: none;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
-  
+
   &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--primary-color) 88%, black) !important;
     transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    box-shadow: var(--shadow-md);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   mat-icon {
     margin-right: 8px;
   }
@@ -158,19 +164,19 @@
 .login-footer {
   text-align: center;
   margin-bottom: 32px;
-  
+
   p {
-    color: #666;
+    color: var(--text-secondary);
     margin: 0;
-    
+
     a {
-      color: #667eea;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: 600;
       transition: color 0.3s ease;
-      
+
       &:hover {
-        color: #5a6fd8;
+        color: color-mix(in srgb, var(--primary-color) 88%, black);
         text-decoration: underline;
       }
     }
@@ -179,13 +185,13 @@
 
 .social-login {
   text-align: center;
-  
+
   .divider {
     color: #999;
     font-size: 0.9rem;
     margin-bottom: 24px;
     position: relative;
-    
+
     &::before,
     &::after {
       content: '';
@@ -195,20 +201,20 @@
       height: 1px;
       background: #e0e0e0;
     }
-    
+
     &::before {
       left: 0;
     }
-    
+
     &::after {
       right: 0;
     }
   }
-  
+
   .social-buttons {
     display: flex;
     gap: 16px;
-    
+
     .social-btn {
       flex: 1;
       padding: 12px;
@@ -218,32 +224,32 @@
       letter-spacing: 0.5px;
       transition: all 0.3s ease;
       border: 2px solid #e0e0e0;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       }
-      
+
       &.google {
         color: #db4437;
         border-color: #db4437;
-        
+
         &:hover {
           background: #db4437;
           color: white;
         }
       }
-      
+
       &.facebook {
         color: #4267B2;
         border-color: #4267B2;
-        
+
         &:hover {
           background: #4267B2;
           color: white;
         }
       }
-      
+
       mat-icon {
         margin-right: 8px;
       }
@@ -256,48 +262,43 @@
   .login-container {
     padding: 16px;
   }
-  
+
   .login-card {
     padding: 32px 24px;
     border-radius: 20px;
   }
-  
+
   .login-header {
     h2 {
       font-size: 1.75rem;
     }
   }
-  
+
   .social-buttons {
     flex-direction: column;
   }
 }
 
-// Material Design overrides
-::ng-deep {
-  .mat-mdc-raised-button {
-    background: transparent !important;
-  }
-  
-  .mat-mdc-stroked-button {
-    border-color: inherit !important;
-  }
-}
-
-// Enhanced Demo Credentials Styles
+// Enhanced Demo Credentials Styles - friendly on-brand callout (soft coral/teal tint)
 .demo-credentials {
   margin-top: 32px;
 
   .demo-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 16px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary-color) 10%, white) 0%,
+      color-mix(in srgb, var(--secondary-color) 10%, white) 100%
+    );
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xs);
     overflow: hidden;
 
     ::ng-deep {
       .mat-mdc-card-header {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--background-white);
+        border-bottom: 1px solid var(--border-color);
         padding: 16px 24px;
         margin: -16px -24px 16px -24px;
 
@@ -306,16 +307,20 @@
         }
 
         .mat-card-title {
-          color: white;
+          color: var(--text-primary);
           font-size: 1.25rem;
           font-weight: 600;
           display: flex;
           align-items: center;
           gap: 8px;
+
+          mat-icon {
+            color: var(--primary-color);
+          }
         }
 
         .mat-card-subtitle {
-          color: rgba(255, 255, 255, 0.8);
+          color: var(--text-secondary);
           font-size: 0.875rem;
           margin-top: 4px;
         }
@@ -326,7 +331,7 @@
       }
 
       .mat-divider {
-        border-top-color: rgba(255, 255, 255, 0.2);
+        border-top-color: var(--border-color);
         margin: 24px 0;
       }
     }
@@ -345,12 +350,12 @@
   }
 
   .demo-user-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: var(--background-white);
+    border-radius: var(--border-radius-md);
     padding: 20px;
     text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xs);
 
     .demo-user-header {
       display: flex;
@@ -365,11 +370,11 @@
         height: 24px;
 
         &.primary-icon {
-          color: #1976d2;
+          color: var(--primary-color);
         }
 
         &.accent-icon {
-          color: #ff4081;
+          color: var(--secondary-color);
         }
       }
 
@@ -377,7 +382,7 @@
         margin: 0;
         font-size: 1.1rem;
         font-weight: 600;
-        color: white;
+        color: var(--text-primary);
       }
     }
 
@@ -392,17 +397,17 @@
 
         .label {
           font-size: 0.875rem;
-          color: rgba(255, 255, 255, 0.8);
+          color: var(--text-secondary);
         }
 
         .value {
-          background: rgba(255, 255, 255, 0.2);
+          background: var(--background-light);
           padding: 4px 8px;
-          border-radius: 6px;
+          border-radius: var(--border-radius-sm);
           font-family: 'Monaco', 'Menlo', monospace;
           font-size: 0.8rem;
           font-weight: 500;
-          color: white;
+          color: var(--text-primary);
           letter-spacing: 0.5px;
         }
       }
@@ -410,7 +415,7 @@
 
     .demo-description {
       font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--text-secondary);
       margin-bottom: 16px;
       display: flex;
       align-items: flex-start;
@@ -423,22 +428,36 @@
         height: 16px;
         margin-top: 2px;
         flex-shrink: 0;
+        color: var(--text-light);
       }
     }
 
     .demo-login-btn {
       width: 100%;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: var(--border-radius-sm);
+      // !important: see .login-button above -- Material's own mat-primary/mat-accent
+      // elevated-button styling otherwise wins over this plain class selector.
+      background: var(--primary-color) !important;
+      color: #fff !important;
       transition: all 0.3s ease;
 
       &:hover {
+        background: color-mix(in srgb, var(--primary-color) 88%, black) !important;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--shadow-sm);
       }
 
       mat-icon {
         margin-right: 8px;
+      }
+    }
+
+    &:nth-child(2) .demo-login-btn {
+      background: var(--secondary-color) !important;
+
+      &:hover {
+        background: color-mix(in srgb, var(--secondary-color) 88%, black) !important;
       }
     }
   }
@@ -451,11 +470,13 @@
       margin: 0 0 16px 0;
       font-size: 1rem;
       font-weight: 600;
+      color: var(--text-primary);
 
       mat-icon {
         font-size: 18px;
         width: 18px;
         height: 18px;
+        color: var(--primary-color);
       }
     }
 
@@ -469,13 +490,13 @@
         align-items: center;
         gap: 8px;
         font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.9);
+        color: var(--text-secondary);
 
         mat-icon {
           font-size: 16px;
           width: 16px;
           height: 16px;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--secondary-color);
         }
       }
 
@@ -491,7 +512,7 @@
     p {
       margin: 0;
       font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -501,56 +522,19 @@
         font-size: 16px;
         width: 16px;
         height: 16px;
+        color: var(--text-light);
       }
 
       a {
-        color: white;
+        color: var(--primary-color);
         text-decoration: underline;
         font-weight: 600;
         transition: color 0.3s ease;
 
         &:hover {
-          color: #e3f2fd;
+          color: color-mix(in srgb, var(--primary-color) 88%, black);
         }
       }
     }
-  }
-}
-
-// Legacy demo credentials styles (for backward compatibility)
-.demo-credentials:not(.demo-card) {
-  margin-top: 32px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-  text-align: center;
-
-  p {
-    margin: 0 0 8px 0;
-    color: #6c757d;
-    font-size: 14px;
-  }
-
-  strong {
-    color: #495057;
-    font-weight: 600;
-  }
-
-  code {
-    background: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', monospace;
-    font-size: 13px;
-    color: #dc3545;
-    font-weight: 500;
-  }
-
-  .demo-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 16px;
   }
 }

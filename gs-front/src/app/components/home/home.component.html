@@ -1,158 +1,103 @@
-<!-- Hero Section -->
-<section class="hero-section">
-  <div class="hero-content">
-    <h1 class="hero-title">Buy and Sell Locally, Simply</h1>
-    <p class="hero-subtitle">Create sales, browse items, and book appointments — all in one place</p>
-    <div class="hero-actions">
-      <button mat-raised-button color="primary" size="large" routerLink="/map">
-        <mat-icon class="icon-lg">map</mat-icon>
-        Explore Map
-      </button>
-      <button mat-stroked-button color="primary" size="large" routerLink="/map">
-        <mat-icon class="icon-lg">explore</mat-icon>
-        Discover Nearby
-      </button>
-    </div>
-  </div>
-  <div class="hero-image">
-    <div class="hero-placeholder">
-      <mat-icon class="icon-xl icon-primary icon-bounce">home</mat-icon>
-      <span>Local Garage Sales</span>
-    </div>
-  </div>
-</section>
-
-<!-- Search Section -->
-<section class="search-section">
-  <div class="search-container">
-    <div class="search-box">
-      <mat-icon class="search-icon icon-primary">info</mat-icon>
-      <input type="text" placeholder="What can you do here? Create sales, browse items, book appointments" class="search-input" disabled>
-      <button mat-raised-button color="accent" class="search-button" routerLink="/login">
-        <mat-icon class="icon-white">search</mat-icon>
-        Get Started
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- Categories Section -->
-<section class="categories-section">
-  <div class="section-header">
-    <h2>Browse by Category</h2>
-    <p>Find exactly what you're looking for</p>
-  </div>
-  
-  <div class="categories-grid">
-    <div class="category-card" *ngFor="let category of categories" routerLink="/browse" [queryParams]="{category: category.name}">
-      <div class="category-icon">
-        <mat-icon>{{category.icon}}</mat-icon>
+<section class="section-space">
+  <div class="hero-panel relative overflow-hidden px-6 py-16 text-center">
+    <div class="hero-glow pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 blur-3xl"></div>
+    <div class="relative mx-auto max-w-3xl space-y-6">
+      <h1 class="text-h1">Discover Garage Sales Near You</h1>
+      <p class="text-lg text-body">Find hidden treasures in your neighborhood.</p>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a routerLink="/browse" class="btn-primary">Browse Sales</a>
+        <a routerLink="/create-sale" class="btn-secondary">Host a Sale</a>
       </div>
-      <h3>{{category.name}}</h3>
-      <p>{{category.count}} sales</p>
     </div>
+  </div>
+
+  <div class="notice-banner mt-6 p-4">
+    <p class="flex items-center justify-center gap-2 text-sm font-medium">
+      <mat-icon class="!h-4 !w-4 !text-base notice-icon">campaign</mat-icon>
+      {{ weekendNearbyCount }} garage sales happening near you this weekend.
+    </p>
   </div>
 </section>
 
-<!-- Featured Sales Section -->
-<section class="featured-section">
-  <div class="section-header">
-    <h2>Featured Garage Sales</h2>
-    <p>Don't miss these upcoming sales in your area</p>
+<section class="section-space">
+  <div class="mb-6 flex items-end justify-between gap-4">
+    <div>
+      <h2 class="text-h2">Featured Sales</h2>
+      <p class="mt-1 text-body">Curated sales people are checking this week.</p>
+    </div>
+    <a routerLink="/browse" class="view-all-link text-sm font-medium transition">View all</a>
   </div>
-  
-  <div class="sales-grid">
-    <mat-card class="sale-card" *ngFor="let sale of featuredSales" routerLink="/sale/{{sale.id}}">
-      <div class="sale-image">
-        <div class="image-placeholder">
-          <mat-icon>image</mat-icon>
-        </div>
-        <div class="sale-badge">
-          <mat-chip color="accent" selected>{{sale.category}}</mat-chip>
-        </div>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" *ngIf="featuredLoading">
+    <div class="skeleton-card h-[360px] animate-pulse" *ngFor="let i of [1, 2, 3, 4, 5, 6]"></div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" *ngIf="!featuredLoading && featuredSales.length">
+    <app-sale-card
+      *ngFor="let sale of featuredSales"
+      [saleId]="sale.id"
+      [title]="sale.title"
+      [date]="sale.date"
+      [time]="sale.timeLabel"
+      [location]="sale.locationLabel"
+      [description]="sale.description"
+      [imageUrl]="sale.imageUrl"
+      [topItems]="sale.topItems"
+      [showBook]="true"
+      (book)="bookAppointment(sale)">
+    </app-sale-card>
+  </div>
+
+  <app-empty-state
+    *ngIf="!featuredLoading && !featuredSales.length"
+    icon="storefront"
+    title="No featured sales yet"
+    message="No garage sales near you yet."
+    actionLabel="Host the first sale"
+    actionLink="/create-sale">
+  </app-empty-state>
+</section>
+
+<section class="section-space">
+  <div class="mb-8 text-center">
+    <h2 class="text-h2">How It Works</h2>
+    <p class="mt-2 text-body">Simple flow from discovery to pickup.</p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <article class="card-modern p-6 text-center">
+      <div class="step-icon mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full">
+        <mat-icon>explore</mat-icon>
       </div>
-      
-      <mat-card-content>
-        <h3 class="sale-title">{{sale.title}}</h3>
-        <div class="sale-details">
-          <div class="detail-item">
-            <mat-icon>location_on</mat-icon>
-            <span>{{sale.location}}</span>
-          </div>
-          <div class="detail-item">
-            <mat-icon>event</mat-icon>
-            <span>{{sale.date}}</span>
-          </div>
-          <div class="detail-item">
-            <mat-icon>schedule</mat-icon>
-            <span>{{sale.time}}</span>
-          </div>
-          <div class="detail-item">
-            <mat-icon>inventory</mat-icon>
-            <span>{{sale.items}} items</span>
-          </div>
-        </div>
-      </mat-card-content>
-      
-      <mat-card-actions>
-        <button mat-button color="primary" routerLink="/sale/{{sale.id}}">
-          <mat-icon>visibility</mat-icon>
-          View Details
-        </button>
-        <button mat-raised-button color="accent" (click)="bookAppointment(sale)">
-          <mat-icon>schedule</mat-icon>
-          Book Appointment
-        </button>
-      </mat-card-actions>
-    </mat-card>
+      <h3 class="text-h3">Step 1</h3>
+      <p class="mt-2 text-body">Create or discover garage sales.</p>
+    </article>
+
+    <article class="card-modern p-6 text-center">
+      <div class="step-icon mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full">
+        <mat-icon>inventory_2</mat-icon>
+      </div>
+      <h3 class="text-h3">Step 2</h3>
+      <p class="mt-2 text-body">Browse items and book a time slot.</p>
+    </article>
+
+    <article class="card-modern p-6 text-center">
+      <div class="step-icon mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full">
+        <mat-icon>local_mall</mat-icon>
+      </div>
+      <h3 class="text-h3">Step 3</h3>
+      <p class="mt-2 text-body">Visit and find treasures.</p>
+    </article>
   </div>
 </section>
 
-<!-- How It Works Section -->
-<section class="how-it-works-section">
-  <div class="section-header">
-    <h2>How It Works</h2>
-    <p>Simple steps to start buying and selling</p>
-  </div>
-  
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-number">1</div>
-      <mat-icon class="step-icon icon-circle icon-primary">search</mat-icon>
-      <h3>Browse Sales</h3>
-      <p>Find garage sales in your area with our search and map features</p>
-    </div>
-    
-    <div class="step-card">
-      <div class="step-number">2</div>
-      <mat-icon class="step-icon icon-circle icon-secondary">event</mat-icon>
-      <h3>Book Appointment</h3>
-      <p>Schedule a visit time that works for both you and the seller</p>
-    </div>
-    
-    <div class="step-card">
-      <div class="step-number">3</div>
-      <mat-icon class="step-icon icon-circle icon-accent">handshake</mat-icon>
-      <h3>Meet & Buy</h3>
-      <p>Visit the seller's home at your scheduled time to view and purchase items</p>
-    </div>
-  </div>
-</section>
-
-<!-- CTA Section -->
-<section class="cta-section">
-  <div class="cta-content">
-    <h2>Ready to Start?</h2>
-    <p>Join thousands of homeowners buying and selling locally</p>
-    <div class="cta-actions">
-      <button mat-raised-button color="primary" size="large" routerLink="/register">
-        <mat-icon class="icon-lg">person_add</mat-icon>
-        Get Started
-      </button>
-      <button mat-stroked-button color="primary" size="large" routerLink="/browse">
-        <mat-icon class="icon-lg icon-primary">explore</mat-icon>
-        Explore Sales
-      </button>
+<section class="section-space">
+  <div class="card-modern px-6 py-10 text-center">
+    <h2 class="text-h2">Ready to host your own sale?</h2>
+    <p class="mx-auto mt-2 max-w-2xl text-body">List your items, set a time window, and connect with buyers nearby.</p>
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+      <a routerLink="/create-sale" class="btn-primary">Host a Sale</a>
+      <a routerLink="/browse" class="btn-secondary">Browse Sales</a>
     </div>
   </div>
 </section>

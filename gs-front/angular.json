@@ -46,10 +46,14 @@
                 }
               ],
               "optimization": {
+                "scripts": true,
+                "styles": true,
                 "fonts": {
                   "inline": false
                 }
               },
+              "sourceMap": false,
+              "extractLicenses": true,
               "budgets": [
                 {
                   "type": "initial",

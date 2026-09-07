@@ -1,0 +1,200 @@
+:host {
+  display: block;
+}
+
+.discover-hero {
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--border-color);
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--primary-color) 8%, transparent), transparent 45%),
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--secondary-color) 8%, transparent), transparent 42%),
+    var(--background-white);
+}
+
+.discover-eyebrow {
+  color: var(--text-secondary);
+}
+
+.discover-label,
+.discover-label-muted {
+  color: var(--text-secondary);
+}
+
+.discover-search-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: var(--border-radius-pill);
+  border: 1px solid var(--border-color);
+  background: var(--background-white);
+  padding: 0.65rem 1.1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.discover-search-pill:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
+}
+
+.discover-search-icon {
+  color: var(--text-light);
+}
+
+.discover-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.discover-search-input::placeholder {
+  color: var(--text-light);
+}
+
+.discover-loading-pill {
+  border-radius: var(--border-radius-pill);
+  border: 1px solid var(--border-color);
+  background: var(--background-white);
+  color: var(--text-secondary);
+}
+
+.discover-sale-selected {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 45%, white);
+}
+
+.discover-map-fab {
+  border-radius: var(--border-radius-pill);
+  background: var(--primary-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.discover-map-fab:hover {
+  background: color-mix(in srgb, var(--primary-color) 88%, black);
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-pill);
+  background: var(--background-white);
+  padding: 0.42rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  border-color: var(--text-light);
+  background: var(--background-light);
+}
+
+.filter-pill.active {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: #fff;
+}
+
+.map-panel {
+  overflow: hidden;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--background-white);
+  box-shadow: var(--shadow-xs);
+}
+
+.map-panel-header {
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+@media (max-width: 767px) {
+  .map-panel {
+    display: none;
+  }
+
+  .map-panel.mobile-open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    border-radius: 0;
+  }
+
+  .map-panel.mobile-open #discover-map {
+    height: calc(100vh - 60px);
+  }
+}
+
+@media (min-width: 768px) {
+  .map-panel {
+    display: block;
+    position: sticky;
+    top: 102px;
+    height: fit-content;
+  }
+}
+
+:host ::ng-deep .discover-marker {
+  background: transparent;
+  border: 0;
+}
+
+:host ::ng-deep .discover-marker-dot {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  background: var(--text-primary);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.28);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+:host ::ng-deep .discover-marker.is-hovered .discover-marker-dot {
+  background: var(--primary-color);
+  transform: scale(1.08);
+}
+
+:host ::ng-deep .discover-marker.is-selected .discover-marker-dot {
+  background: color-mix(in srgb, var(--primary-color) 85%, black);
+  transform: scale(1.12);
+}
+
+:host ::ng-deep .discover-popup {
+  font-family: var(--font-family-primary);
+}
+
+:host ::ng-deep .discover-popup .popup-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+:host ::ng-deep .discover-popup .popup-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+:host ::ng-deep .discover-popup .popup-items {
+  margin: 0.45rem 0;
+  font-size: 0.76rem;
+  color: var(--text-primary);
+}
+
+:host ::ng-deep .discover-popup .popup-items.muted {
+  color: var(--text-light);
+}
+
+:host ::ng-deep .discover-popup .popup-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  text-decoration: none;
+}

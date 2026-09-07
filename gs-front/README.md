@@ -40,7 +40,7 @@ App URL: `http://localhost:4200`
 Current default:
 - `apiBaseUrl: 'http://localhost:8081'` (dev)
 
-Before Azure deploy, set `environment.prod.ts` to your backend HTTPS URL.
+If you self-host a production build, point `environment.prod.ts` at your backend's real URL first.
 
 ## Available Scripts
 
@@ -58,12 +58,8 @@ Before Azure deploy, set `environment.prod.ts` to your backend HTTPS URL.
 - Create and manage sales
 - Profile management
 
-## Azure Static Web Apps
+## Self-Hosting
 
-Expected settings:
-
-- App location: `gs-front`
-- Build command: `npm run build`
-- Output location: `dist/gs-front/browser`
-
-SPA fallback config is in `public/staticwebapp.config.json`.
+This project has no managed deployment target — it's built to run locally. `npm run build` outputs
+static assets to `dist/gs-front/browser` if you want to serve them yourself (any static file host or
+SPA-aware web server works; just make sure unknown routes fall back to `index.html`).

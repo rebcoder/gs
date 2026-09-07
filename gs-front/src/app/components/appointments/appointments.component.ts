@@ -101,13 +101,13 @@ import { catchError, forkJoin, of } from 'rxjs';
             </div>
 
             <div class="status-chip">
-              <mat-chip [ngClass]="'status-' + (appointment.status || '').toLowerCase()" selected>
-                {{ appointment.status || 'UNKNOWN' }}
+              <mat-chip [ngClass]="'status-' + (appointment.statusNorm || '').toLowerCase()" selected>
+                {{ appointment.statusNorm || 'UNKNOWN' }}
               </mat-chip>
             </div>
           </mat-card-content>
 
-          <mat-card-actions class="actions" *ngIf="appointment.status === 'PENDING'">
+          <mat-card-actions class="actions" *ngIf="appointment.statusNorm === 'PENDING'">
             <button mat-raised-button color="primary"
                     (click)="confirmAppointment(appointment.id)"
                     [disabled]="isUpdating === appointment.id">
@@ -122,10 +122,10 @@ import { catchError, forkJoin, of } from 'rxjs';
             </button>
           </mat-card-actions>
 
-          <mat-card-actions class="actions" *ngIf="appointment.status !== 'PENDING'">
+          <mat-card-actions class="actions" *ngIf="appointment.statusNorm !== 'PENDING'">
             <span class="status-message">
               <mat-icon>info</mat-icon>
-              Appointment {{ appointment.status?.toLowerCase() }}
+              Appointment {{ appointment.statusNorm?.toLowerCase() }}
             </span>
           </mat-card-actions>
         </mat-card>
@@ -181,7 +181,12 @@ export class AppointmentsComponent implements OnInit {
         const merged = [...(mine || []), ...(seller || [])];
         const byId = new Map<number, any>();
         for (const appt of merged) {
-          if (appt?.id != null) byId.set(appt.id, appt);
+          if (appt?.id != null) {
+            byId.set(appt.id, {
+              ...appt,
+              statusNorm: this.appointmentService.normalizeStatus(appt?.status)
+            });
+          }
         }
         this.appointments = Array.from(byId.values()).sort((a, b) => {
           const at = new Date(a?.appointmentTime || 0).getTime();
@@ -203,11 +208,12 @@ export class AppointmentsComponent implements OnInit {
 
   confirmAppointment(id: number) {
     this.isUpdating = id;
-    this.appointmentService.updateStatus(id, 'CONFIRMED').subscribe({
+    this.appointmentService.confirmAppointment(id).subscribe({
       next: () => {
         const appointment = this.appointments.find(a => a.id === id);
         if (appointment) {
           appointment.status = 'CONFIRMED';
+          appointment.statusNorm = 'CONFIRMED';
           this.snackBar.open('Appointment confirmed successfully!', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar']
@@ -227,11 +233,12 @@ export class AppointmentsComponent implements OnInit {
 
   cancelAppointment(id: number) {
     this.isUpdating = id;
-    this.appointmentService.updateStatus(id, 'CANCELLED').subscribe({
+    this.appointmentService.cancelAppointment(id).subscribe({
       next: () => {
         const appointment = this.appointments.find(a => a.id === id);
         if (appointment) {
           appointment.status = 'CANCELLED';
+          appointment.statusNorm = 'CANCELLED';
           this.snackBar.open('Appointment cancelled successfully!', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar']
@@ -251,7 +258,7 @@ export class AppointmentsComponent implements OnInit {
 
   get filteredAppointments() {
     if (this.selectedStatus === 'ALL') return this.appointments;
-    return this.appointments.filter(a => a.status === this.selectedStatus);
+    return this.appointments.filter(a => a.statusNorm === this.selectedStatus);
   }
 
   setStatus(status: 'ALL' | 'PENDING' | 'CONFIRMED' | 'CANCELLED') {

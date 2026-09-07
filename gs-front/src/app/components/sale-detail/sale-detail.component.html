@@ -1,4 +1,3 @@
-<!-- Loading State -->
 <app-loading
   *ngIf="!sale"
   message="Loading sale details..."
@@ -7,123 +6,161 @@
   size="medium">
 </app-loading>
 
-<!-- Sale Details -->
-<div class="sale-detail-container" *ngIf="sale">
-  <!-- Sale Header -->
-  <div class="sale-header">
-    <div class="sale-title-section">
-      <h1 class="sale-title">{{sale.saleName || sale.sale_name}}</h1>
-      <div class="sale-meta">
-        <mat-chip class="location-chip" selected>
-          <mat-icon>location_on</mat-icon>
-          {{sale.area}}, {{sale.city}}
-        </mat-chip>
-        <mat-chip class="distance-chip" selected *ngIf="sale.latitude && sale.longitude">
-          <mat-icon>map</mat-icon>
-          {{calculateDistance(sale.latitude, sale.longitude)}} km away
-        </mat-chip>
-      </div>
-    </div>
-    <div class="sale-actions">
-      <button mat-raised-button color="accent" (click)="book()">
-        <mat-icon>schedule</mat-icon>
-        Book Appointment
-      </button>
-    </div>
-  </div>
-
-  <!-- Sale Description -->
-  <mat-card class="sale-description-card">
-    <mat-card-content>
-      <h3>About This Sale</h3>
-      <p>{{sale.description}}</p>
-      <div class="sale-stats" *ngIf="sale.items && sale.items.length">
-        <div class="stat-item">
-          <mat-icon>inventory</mat-icon>
-          <span>{{sale.items.length}} items available</span>
+<div *ngIf="sale" class="space-y-10">
+  <section class="section-space pb-0">
+    <div class="grid gap-6 lg:grid-cols-[1.55fr_0.95fr]">
+      <article class="card-modern overflow-hidden p-0">
+        <div class="gallery-hero aspect-[16/9]">
+          <img
+            *ngIf="selectedImageUrl"
+            [src]="selectedImageUrl"
+            [alt]="sale.title"
+            class="h-full w-full object-cover"
+            loading="lazy" />
+          <div *ngIf="!selectedImageUrl" class="gallery-placeholder flex h-full items-center justify-center">
+            <mat-icon class="!h-10 !w-10 !text-4xl">photo</mat-icon>
+          </div>
         </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
 
-  <!-- Items Section -->
-  <div class="items-section" *ngIf="sale.items && sale.items.length">
-    <h2>Available Items</h2>
-    <div class="items-grid">
-      <mat-card class="item-card" *ngFor="let item of sale.items">
-        <mat-card-content>
-          <div class="item-header">
-            <h3 class="item-name">{{item.name}}</h3>
-            <div class="item-price">\${{item.price}}</div>
-          </div>
-          <div class="item-details">
-            <mat-chip [class]="'category-' + item.category.toLowerCase()" selected>
-              {{formatCategory(item.category)}}
-            </mat-chip>
-            <p class="item-description" *ngIf="item.description">{{item.description}}</p>
-            <div class="item-meta" *ngIf="item.condition || item.brand">
-              <span *ngIf="item.condition">Condition: {{item.condition}}</span>
-              <span *ngIf="item.brand && item.condition"> • </span>
-              <span *ngIf="item.brand">Brand: {{item.brand}}</span>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
+        <div class="gallery-strip flex gap-2 overflow-x-auto p-3" *ngIf="itemGalleryImages().length">
+          <button
+            *ngFor="let image of itemGalleryImages(); trackBy: trackByImageUrl"
+            type="button"
+            class="gallery-thumb h-16 w-20 shrink-0 overflow-hidden"
+            [class.gallery-thumb-selected]="selectedImageUrl === image"
+            (click)="selectImage(image)">
+            <img [src]="image" alt="Item preview" class="h-full w-full object-cover" loading="lazy" />
+          </button>
+        </div>
+      </article>
+
+      <aside class="card-modern h-fit p-6 lg:sticky lg:top-24">
+        <h1 class="text-h2">{{ sale.title }}</h1>
+
+        <div class="mt-4 flex flex-wrap gap-2 text-sm text-body">
+          <span class="meta-chip inline-flex items-center gap-1 px-3 py-1">
+            <mat-icon class="!h-4 !w-4 !text-base meta-chip-icon">location_on</mat-icon>
+            {{ sale.locationLabel }}
+          </span>
+          <span class="meta-chip inline-flex items-center gap-1 px-3 py-1">
+            <mat-icon class="!h-4 !w-4 !text-base meta-chip-icon">event</mat-icon>
+            {{ sale.date || 'Date TBA' }}
+          </span>
+          <span class="meta-chip inline-flex items-center gap-1 px-3 py-1">
+            <mat-icon class="!h-4 !w-4 !text-base meta-chip-icon">schedule</mat-icon>
+            {{ sale.timeLabel }}
+          </span>
+        </div>
+
+        <p class="mt-5 text-body">{{ sale.description }}</p>
+
+        <div class="booking-panel mt-6 p-4">
+          <h2 class="text-h3">Book Appointment</h2>
+          <p class="mt-2 text-sm text-body">Choose a slot and reserve your visit before heading to the sale.</p>
+          <button type="button" class="btn-primary mt-4 w-full" (click)="book()">
+            <mat-icon class="!h-4 !w-4 !text-base">schedule</mat-icon>
+            Book a Time Slot
+          </button>
+        </div>
+      </aside>
     </div>
-  </div>
+  </section>
 
-  <!-- No Items Message -->
-  <div class="no-items" *ngIf="!sale.items || sale.items.length === 0">
-    <mat-icon>inventory_2</mat-icon>
-    <h3>No items listed yet</h3>
-    <p>The seller hasn't added any items to this sale yet. Check back later!</p>
-  </div>
+  <section class="section-space pt-0">
+    <div class="mb-6 flex items-center justify-between">
+      <h2 class="text-h2">Items at This Sale</h2>
+      <p class="text-sm text-body">{{ sale.items.length }} listed</p>
+    </div>
 
-  <!-- Add Item Form (for sellers) -->
-  <mat-card class="add-item-card" *ngIf="canManageSale()">
-    <mat-card-header>
-      <mat-card-title>Add New Item</mat-card-title>
-      <mat-card-subtitle>Expand your garage sale inventory</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="itemForm" (ngSubmit)="addItem()" class="add-item-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" *ngIf="sale.items.length">
+      <article
+        *ngFor="let item of sale.items; trackBy: trackByItemId"
+        class="item-card group cursor-pointer overflow-hidden transition hover:-translate-y-0.5"
+        (click)="openItemPreview(item)">
+        <div class="item-card-media aspect-[4/3]">
+          <img
+            *ngIf="item.imageUrl"
+            [src]="item.imageUrl"
+            [alt]="item.name"
+            class="h-full w-full object-cover transition duration-300 ease-out group-hover:scale-[1.05]"
+            loading="lazy" />
+          <div *ngIf="!item.imageUrl" class="flex h-full items-center justify-center item-card-placeholder">
+            <mat-icon>image</mat-icon>
+          </div>
+        </div>
+
+        <div class="space-y-2 p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-h3 line-clamp-1">{{ item.name }}</h3>
+            <p class="text-lg font-semibold item-price">${{ item.price }}</p>
+          </div>
+          <p *ngIf="item.description" class="line-clamp-2 text-sm text-body">{{ item.description }}</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-body">{{ humanizeCategory(item.category) }}</p>
+          <p class="text-xs font-medium item-tap-hint">Tap for preview</p>
+
+          <button
+            *ngIf="canManageSale()"
+            type="button"
+            class="btn-secondary mt-2 w-full"
+            (click)="$event.stopPropagation(); removeItem(item.id)">
+            Remove Item
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <div *ngIf="!sale.items.length" class="empty-items px-6 py-10 text-center">
+      <mat-icon class="!h-8 !w-8 !text-2xl empty-items-icon">inventory_2</mat-icon>
+      <h3 class="mt-3 text-h3">No items listed yet</h3>
+      <p class="mt-2 text-body">The seller has not added items yet. Check back later.</p>
+    </div>
+  </section>
+
+  <section class="section-space pt-0" *ngIf="canManageSale()">
+    <article class="card-modern p-6">
+      <h2 class="text-h2">Add Item</h2>
+      <p class="mt-1 text-body">Add a new item to this sale listing.</p>
+
+      <form [formGroup]="itemForm" (ngSubmit)="addItem()" class="mt-6 space-y-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
             <mat-label>Item Name</mat-label>
-            <input matInput formControlName="name" placeholder="e.g., Vintage Chair">
-            <mat-icon matSuffix>label</mat-icon>
+            <input matInput formControlName="name" placeholder="e.g. Vintage chair" />
           </mat-form-field>
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Price ($)</mat-label>
-            <input matInput type="number" formControlName="price" placeholder="25.00">
-            <mat-icon matSuffix>attach_money</mat-icon>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Price</mat-label>
+            <input matInput type="number" formControlName="price" placeholder="e.g. 25" />
           </mat-form-field>
         </div>
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Category</mat-label>
-            <mat-select formControlName="category">
-              <mat-option value="FURNITURE">Furniture</mat-option>
-              <mat-option value="ELECTRONICS">Electronics</mat-option>
-              <mat-option value="CLOTHING">Clothing</mat-option>
-              <mat-option value="HOME_DECOR">Home Decor</mat-option>
-              <mat-option value="KITCHEN_APPLIANCES">Kitchen Appliances</mat-option>
-              <mat-option value="BOOKS">Books</mat-option>
-              <mat-option value="SPORTS_EQUIPMENT">Sports Equipment</mat-option>
-              <mat-option value="COLLECTIBLES">Collectibles</mat-option>
-              <mat-option value="ANTIQUES">Antiques</mat-option>
-              <mat-option value="OTHER">Other</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <div class="form-actions">
-            <button mat-raised-button color="primary" type="submit"
-                    [disabled]="itemForm.invalid || isAdding">
-              <mat-icon>add</mat-icon>
-              {{isAdding ? 'Adding...' : 'Add Item'}}
-            </button>
+
+        <mat-form-field appearance="outline" class="w-full md:w-1/2">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            <mat-option *ngFor="let category of categories" [value]="category">{{ humanizeCategory(category) }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="3" formControlName="description" placeholder="Condition, details"></textarea>
+        </mat-form-field>
+
+        <div class="upload-box p-4">
+          <label class="block text-sm font-medium upload-label">Item image (optional)</label>
+          <input #itemImageInput class="mt-2 block w-full text-sm upload-hint" type="file" accept="image/*" (change)="onItemImageSelected($event)" />
+          <p class="mt-1 text-xs upload-hint">Accepted: JPG, PNG, WEBP, GIF. Max 5MB.</p>
+
+          <div class="mt-3 w-[180px]" *ngIf="itemImagePreviewUrl">
+            <img [src]="itemImagePreviewUrl" alt="Item preview" class="h-[120px] w-full rounded-lg object-cover" />
+            <button mat-button type="button" color="warn" class="!mt-1 !p-0" (click)="clearItemImage(itemImageInput)">Remove</button>
           </div>
         </div>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="itemForm.invalid || isAdding">
+          {{ isAdding ? 'Adding...' : 'Add Item' }}
+        </button>
       </form>
-    </mat-card-content>
-  </mat-card>
+    </article>
+  </section>
 </div>

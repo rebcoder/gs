@@ -1,139 +1,122 @@
-<div class="gs-root">
-  <div class="orb orb-left" aria-hidden="true"></div>
-  <div class="orb orb-right" aria-hidden="true"></div>
-
-  <header class="gs-topbar">
-    <button class="brand" (click)="onLogoClick()" type="button" aria-label="Go home">
-      <span class="brand-mark">
-        <mat-icon>storefront</mat-icon>
-      </span>
-      <span class="brand-text">
-        <strong>GarageSale</strong>
-        <small>Neighborhood Marketplace</small>
-      </span>
-    </button>
-
-    <nav class="top-nav">
-      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-      <a routerLink="/browse" routerLinkActive="active">Browse</a>
-      <a routerLink="/map" routerLinkActive="active">Map</a>
-    </nav>
-
-    <div class="search-strip" role="search">
-      <input
-        type="text"
-        [(ngModel)]="locationQuery"
-        placeholder="City or area"
-        aria-label="Search location"
-      />
-      <input
-        type="text"
-        [(ngModel)]="searchQuery"
-        placeholder="Items, categories, keywords"
-        aria-label="Search keywords"
-      />
-      <button class="action action-primary" (click)="onSearch()" type="button">
-        <mat-icon>search</mat-icon>
-        Search
+<div class="min-h-screen bg-transparent app-shell-text">
+  <header class="app-header sticky top-0 z-50 backdrop-blur">
+    <div class="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-6">
+      <button
+        class="logo-btn inline-flex shrink-0 items-center gap-2 rounded-lg px-2 py-1 transition"
+        (click)="onLogoClick()"
+        type="button"
+        aria-label="Go home">
+        <span class="logo-mark inline-flex h-9 w-9 items-center justify-center rounded-lg text-white">
+          <mat-icon class="!h-5 !w-5 !text-lg">storefront</mat-icon>
+        </span>
+        <span class="text-base font-semibold">GarageSale</span>
       </button>
-    </div>
 
-    <div class="auth-box">
-      <ng-container *ngIf="!isLoggedIn(); else loggedInMenu">
-        <a class="action action-muted" routerLink="/login">Login</a>
-        <a class="action action-primary" routerLink="/register">Register</a>
-      </ng-container>
-
-      <ng-template #loggedInMenu>
-        <button class="profile-trigger" [matMenuTriggerFor]="userMenuTrigger">
-          <mat-icon>account_circle</mat-icon>
-          <span>{{ currentUsername() || 'Account' }}</span>
+      <div class="hidden flex-1 justify-center md:flex">
+        <button type="button" class="search-pill" (click)="onSearchPillClick()" aria-label="Search garage sales">
+          <span class="search-pill-icon">
+            <mat-icon class="!h-4 !w-4 !text-base">search</mat-icon>
+          </span>
+          <span class="search-pill-text">Search sales, items, neighborhoods</span>
         </button>
-        <mat-menu #userMenuTrigger="matMenu">
-          <button mat-menu-item routerLink="/profile">
-            <mat-icon>person</mat-icon>
+      </div>
+
+      <nav class="hidden shrink-0 items-center gap-8 md:flex">
+        <a routerLink="/browse" routerLinkActive="nav-link-active" class="nav-link">Browse</a>
+        <a routerLink="/create-sale" routerLinkActive="nav-link-active" class="nav-link">Host a Sale</a>
+      </nav>
+
+      <div class="hidden shrink-0 items-center gap-3 md:flex">
+        <ng-container *ngIf="!isLoggedIn(); else profileMenu">
+          <a routerLink="/login" class="btn-secondary">Login</a>
+        </ng-container>
+        <ng-template #profileMenu>
+          <button class="btn-secondary" [matMenuTriggerFor]="userMenu">
+            <mat-icon class="!h-4 !w-4 !text-base">account_circle</mat-icon>
             Profile
           </button>
-          <button mat-menu-item routerLink="/appointments">
-            <mat-icon>event</mat-icon>
-            Appointments
-          </button>
-          <button mat-menu-item routerLink="/my-sales">
-            <mat-icon>store</mat-icon>
-            My Sales
-          </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item (click)="logout()">
-            <mat-icon>logout</mat-icon>
-            Logout
-          </button>
-          <button mat-menu-item *ngIf="hostname === 'localhost'" (click)="clearDemo()">
-            <mat-icon>delete_sweep</mat-icon>
-            Clear Demo Data
-          </button>
-        </mat-menu>
-      </ng-template>
+        </ng-template>
+      </div>
+
+      <button type="button" class="mobile-menu-btn inline-flex shrink-0 p-2 md:hidden" [matMenuTriggerFor]="mobileMenu" aria-label="Open menu">
+        <mat-icon>menu</mat-icon>
+      </button>
     </div>
   </header>
 
-  <main class="gs-main">
-    <aside class="gs-rail">
-      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-        <mat-icon>home</mat-icon>
-        <span>Home</span>
-      </a>
-      <a routerLink="/browse" routerLinkActive="active">
-        <mat-icon>search</mat-icon>
-        <span>Browse</span>
-      </a>
-      <a routerLink="/map" routerLinkActive="active">
-        <mat-icon>map</mat-icon>
-        <span>Map</span>
-      </a>
-      <a routerLink="/appointments" routerLinkActive="active" *ngIf="isLoggedIn()">
-        <mat-icon>event</mat-icon>
-        <span>Appointments</span>
-      </a>
-      <a routerLink="/my-sales" routerLinkActive="active" *ngIf="isLoggedIn()">
-        <mat-icon>inventory_2</mat-icon>
-        <span>My Sales</span>
-      </a>
-      <a routerLink="/profile" routerLinkActive="active" *ngIf="isLoggedIn()">
-        <mat-icon>badge</mat-icon>
-        <span>Profile</span>
-      </a>
+  <mat-menu #userMenu="matMenu">
+    <button mat-menu-item routerLink="/profile">
+      <mat-icon>person</mat-icon>
+      Profile
+    </button>
+    <button mat-menu-item routerLink="/appointments">
+      <mat-icon>event</mat-icon>
+      Appointments
+    </button>
+    <button mat-menu-item routerLink="/my-sales">
+      <mat-icon>store</mat-icon>
+      My Sales
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+    <button mat-menu-item *ngIf="hostname === 'localhost'" (click)="clearDemo()">
+      <mat-icon>delete_sweep</mat-icon>
+      Clear Demo Data
+    </button>
+  </mat-menu>
 
-      <a class="action action-primary rail-cta" routerLink="/create-sale" *ngIf="isLoggedIn()">
-        <mat-icon>add_circle</mat-icon>
-        Create Sale
-      </a>
-    </aside>
+  <mat-menu #mobileMenu="matMenu">
+    <button mat-menu-item routerLink="/browse">
+      <mat-icon>search</mat-icon>
+      Browse
+    </button>
+    <button mat-menu-item routerLink="/create-sale">
+      <mat-icon>add_business</mat-icon>
+      Host a Sale
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item *ngIf="!isLoggedIn()" routerLink="/login">
+      <mat-icon>login</mat-icon>
+      Login
+    </button>
+    <button mat-menu-item *ngIf="isLoggedIn()" routerLink="/profile">
+      <mat-icon>person</mat-icon>
+      Profile
+    </button>
+    <button mat-menu-item *ngIf="isLoggedIn()" routerLink="/my-sales">
+      <mat-icon>store</mat-icon>
+      My Sales
+    </button>
+    <button mat-menu-item *ngIf="isLoggedIn()" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  </mat-menu>
 
-    <section class="gs-canvas">
+  <div class="http-loading-indicator" *ngIf="httpLoading$ | async" aria-hidden="true">
+    <span></span>
+  </div>
+
+  <main>
+    <section class="page-container">
       <router-outlet></router-outlet>
     </section>
   </main>
 
-  <nav class="mobile-dock">
-    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-      <mat-icon>home</mat-icon>
-      <span>Home</span>
-    </a>
-    <a routerLink="/browse" routerLinkActive="active">
-      <mat-icon>search</mat-icon>
-      <span>Browse</span>
-    </a>
-    <a routerLink="/map" routerLinkActive="active">
-      <mat-icon>map</mat-icon>
-      <span>Map</span>
-    </a>
-    <a routerLink="/create-sale" routerLinkActive="active" *ngIf="isLoggedIn()">
-      <mat-icon>add_circle</mat-icon>
-      <span>Create</span>
-    </a>
-    <a routerLink="/profile" routerLinkActive="active" *ngIf="isLoggedIn()">
-      <mat-icon>person</mat-icon>
-      <span>Profile</span>
-    </a>
-  </nav>
+  <footer class="app-footer mt-12">
+    <div class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 py-8 sm:flex-row sm:items-center">
+      <div>
+        <p class="text-base font-semibold">GarageSale</p>
+        <p class="footer-subtext mt-1 text-sm">Local deals. Better weekends.</p>
+      </div>
+      <div class="footer-links flex items-center gap-5 text-sm">
+        <a routerLink="/browse" class="transition">Browse</a>
+        <a routerLink="/create-sale" class="transition">Host</a>
+      </div>
+      <p class="footer-copyright text-xs">© {{ currentYear }} GarageSale</p>
+    </div>
+  </footer>
 </div>

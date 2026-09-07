@@ -1,0 +1,111 @@
+<section class="section-space">
+  <div class="mb-8">
+    <h1 class="text-h1">Create a Garage Sale</h1>
+    <p class="mt-2 text-body">Publish your sale details and optionally add the first item.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <article class="card-modern p-6">
+        <h2 class="text-h2">Sale Information</h2>
+        <div class="mt-4 space-y-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Sale Name</mat-label>
+            <input matInput formControlName="saleName" placeholder="e.g. Weekend Furniture Sale" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Description</mat-label>
+            <textarea matInput rows="4" formControlName="description" placeholder="What should buyers know?"></textarea>
+          </mat-form-field>
+        </div>
+      </article>
+
+      <article class="card-modern p-6">
+        <h2 class="text-h2">Date & Time</h2>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full sm:col-span-2">
+            <mat-label>Sale Date</mat-label>
+            <input matInput type="date" formControlName="saleDate" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Start Time</mat-label>
+            <input matInput formControlName="startTime" placeholder="09:00" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>End Time</mat-label>
+            <input matInput formControlName="endTime" placeholder="17:00" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full sm:col-span-2">
+            <mat-label>Max visitors per slot</mat-label>
+            <input matInput type="number" min="1" max="10" formControlName="maxAppointmentsPerSlot" />
+          </mat-form-field>
+        </div>
+      </article>
+
+      <article class="card-modern p-6">
+        <h2 class="text-h2">Location</h2>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" placeholder="Your city" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Area / Neighborhood</mat-label>
+            <input matInput formControlName="area" placeholder="e.g. Downtown" />
+          </mat-form-field>
+        </div>
+      </article>
+
+      <article class="card-modern p-6">
+        <h2 class="text-h2">Items</h2>
+        <p class="mt-1 text-sm text-gray-600">Optional first item for your listing.</p>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Item Name</mat-label>
+            <input matInput formControlName="firstItemName" placeholder="e.g. Coffee table" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Price</mat-label>
+            <input matInput type="number" min="0" formControlName="firstItemPrice" placeholder="e.g. 45" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="firstItemCategory">
+              <mat-option *ngFor="let category of itemCategories" [value]="category">{{ category }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Item Description</mat-label>
+            <textarea matInput rows="2" formControlName="firstItemDescription" placeholder="Condition, details"></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <label class="block text-sm font-medium text-gray-700">Item image (optional)</label>
+          <input #createItemImageInput class="mt-2 block w-full text-sm text-gray-600" type="file" accept="image/*" (change)="onCreateItemImageSelected($event)" />
+          <p class="mt-1 text-xs text-gray-500">Accepted: JPG, PNG, WEBP, GIF. Max 5MB.</p>
+          <div class="mt-3 w-[180px]" *ngIf="createItemImagePreviewUrl">
+            <img [src]="createItemImagePreviewUrl" alt="First item preview" class="h-[120px] w-full rounded-lg object-cover" />
+            <button mat-button type="button" color="warn" class="!mt-1 !p-0" (click)="clearCreateItemImage(createItemImageInput)">Remove</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+      <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || isLoading">
+        {{ isLoading ? 'Creating...' : 'Create Sale' }}
+      </button>
+    </div>
+  </form>
+</section>

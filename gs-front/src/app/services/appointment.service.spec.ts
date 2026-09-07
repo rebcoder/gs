@@ -52,9 +52,23 @@ describe('AppointmentService', () => {
 
     const req = httpMock.expectOne((r) => r.url.includes('/appointments/slot-count'));
     expect(req.request.method).toBe('GET');
-    // return numeric value
-    req.flush(2);
+    // backend returns { count: number }
+    req.flush({ count: 2 });
     expect(result).toBe(2);
+  });
+
+  it('should tolerate numeric slot-count response', () => {
+    const saleId = 5;
+    const timeSlot = '09:00';
+    const dateIso = '2025-08-26';
+
+    let result: any;
+    service.getSlotCount(saleId, timeSlot, dateIso).subscribe((res) => result = res);
+
+    const req = httpMock.expectOne((r) => r.url.includes('/appointments/slot-count'));
+    expect(req.request.method).toBe('GET');
+    req.flush(3);
+    expect(result).toBe(3);
   });
 
   it('should call notifyItemRemoved with correct body', () => {
