@@ -38,6 +38,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found"));
 
         in.rebcoder.gs_back.models.User seller = sale.getSeller();
+        if (seller == null) {
+            throw new ResourceNotFoundException("Seller not found for sale");
+        }
         if (appointmentDto.getSellerId() != null && !appointmentDto.getSellerId().equals(seller.getId())) {
             throw new IllegalArgumentException("Seller does not match the selected sale");
         }
@@ -66,18 +69,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setNotes(appointmentDto.getNotes());
         appointment.setStatus(in.rebcoder.gs_back.models.AppointmentStatus.PENDING);
 
-        // Enforce sale open hours/date
+        // Enforce sale open hours/date. These are client-correctable input errors (bad date/time
+        // choice), not server faults - use IllegalArgumentException like the checks above, so
+        // GlobalExceptionHandler maps them to 400 instead of a generic 500.
         if (sale.getSaleDate() != null && appointment.getAppointmentTime() != null &&
                 !appointment.getAppointmentTime().toLocalDate().equals(sale.getSaleDate())) {
-            throw new RuntimeException("Appointment date must match sale date");
+            throw new IllegalArgumentException("Appointment date must match sale date");
         }
         if (appointment.getAppointmentTime() != null && (sale.getStartTime() != null || sale.getEndTime() != null)) {
             java.time.LocalTime t = appointment.getAppointmentTime().toLocalTime();
             if (sale.getStartTime() != null && t.isBefore(sale.getStartTime())) {
-                throw new RuntimeException("Appointment time is before sale opening hours");
+                throw new IllegalArgumentException("Appointment time is before sale opening hours");
             }
             if (sale.getEndTime() != null && (t.equals(sale.getEndTime()) || t.isAfter(sale.getEndTime()))) {
-                throw new RuntimeException("Appointment time is after sale closing hours");
+                throw new IllegalArgumentException("Appointment time is after sale closing hours");
             }
         }
 
@@ -98,14 +103,16 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentDto updateAppointment(Long id, AppointmentDto appointmentDto) {
         in.rebcoder.gs_back.models.Appointment appt = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
 
         // Update status if provided
         if (appointmentDto.getStatus() != null) {
             try {
-                AppointmentStatus status = AppointmentStatus.valueOf(appointmentDto.getStatus());
-                appt.setStatus(status);
-            } catch (Exception ignored) {}
+                AppointmentStatus status = normalizeStatus(appointmentDto.getStatus());
+                if (status != null) {
+                    appt.setStatus(status);
+                }
+            } catch (IllegalArgumentException ignored) {}
         }
 
         if (appointmentDto.getNotes() != null) appt.setNotes(appointmentDto.getNotes());
@@ -114,7 +121,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         AppointmentDto dto = new AppointmentDto();
         dto.setId(appt.getId());
-        dto.setStatus(appt.getStatus() != null ? appt.getStatus().name() : null);
+        dto.setStatus(normalizeStatus(appt.getStatus()));
         dto.setNotes(appt.getNotes());
         dto.setBuyerName(appt.getBuyer() != null ? appt.getBuyer().getUsername() : null);
         dto.setSellerName(appt.getSeller() != null ? appt.getSeller().getUsername() : null);
@@ -155,7 +162,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public AppointmentDto getAppointmentById(Long id) {
-        in.rebcoder.gs_back.models.Appointment appt = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        in.rebcoder.gs_back.models.Appointment appt = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
         return toDto(appt);
     }
 
@@ -179,6 +186,22 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    public List<AppointmentDto> getAppointmentsForSeller(String username) {
+        in.rebcoder.gs_back.models.User seller = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return appointmentRepository.findBySeller(seller).stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AppointmentDto> getAppointmentsForSellerSale(String username, Long saleId) {
+        in.rebcoder.gs_back.models.User seller = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return appointmentRepository.findBySellerAndSaleId(seller, saleId).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<AppointmentDto> getAppointmentsByHome(Long homeId) {
         // Return empty list for now
         return new ArrayList<>();
@@ -189,15 +212,34 @@ public class AppointmentServiceImpl implements AppointmentService {
         in.rebcoder.gs_back.models.Sale sale = saleRepository.findById(saleId).orElse(null);
         if (sale == null) return true;
         List<in.rebcoder.gs_back.models.Appointment> existing = appointmentRepository.findBySaleIdAndAppointmentTime(saleId, appointmentTime);
+        if (existing == null) existing = List.of();
         int max = sale.getMaxAppointmentsPerSlot() > 0 ? sale.getMaxAppointmentsPerSlot() : 3;
         return existing.size() < max;
     }
 
     @Override
     public void updateAppointmentStatus(Long id, AppointmentStatus status) {
-        in.rebcoder.gs_back.models.Appointment appt = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        in.rebcoder.gs_back.models.Appointment appt = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
         appt.setStatus(status);
         appointmentRepository.save(appt);
+    }
+
+    private String normalizeStatus(AppointmentStatus status) {
+        if (status == null) return null;
+        return status.name();
+    }
+
+    /**
+     * Normalizes a raw client-supplied status string (e.g. the legacy/common
+     * misspelling "CANCELED") into a valid {@link AppointmentStatus}.
+     */
+    private AppointmentStatus normalizeStatus(String rawStatus) {
+        if (rawStatus == null || rawStatus.isBlank()) return null;
+        String normalized = rawStatus.trim().toUpperCase();
+        if ("CANCELED".equals(normalized)) {
+            normalized = "CANCELLED";
+        }
+        return AppointmentStatus.valueOf(normalized);
     }
 
     private AppointmentDto toDto(in.rebcoder.gs_back.models.Appointment appt) {
@@ -222,7 +264,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         dto.setAppointmentTime(appt.getAppointmentTime());
         dto.setTimeSlot(appt.getTimeSlot());
         dto.setNotes(appt.getNotes());
-        dto.setStatus(appt.getStatus() != null ? appt.getStatus().name() : null);
+        dto.setStatus(normalizeStatus(appt.getStatus()));
 
         // Set interested item IDs
         if (appt.getInterestedItems() != null && !appt.getInterestedItems().isEmpty()) {

@@ -2,16 +2,21 @@ package in.rebcoder.gs_back.controllers;
 
 import in.rebcoder.gs_back.dtos.GarageSaleDto;
 import in.rebcoder.gs_back.dtos.ItemDto;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import in.rebcoder.gs_back.services.GarageSaleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/garage-sales")
-@CrossOrigin(origins = "*")
+@Validated
 public class GarageSaleController {
     private final GarageSaleService garageSaleService;
 
@@ -25,6 +30,39 @@ public class GarageSaleController {
         return ResponseEntity.ok(garageSaleService.searchGarageSales(null,null,null,null,null,null,null));
     }
 
+    @GetMapping("/featured")
+    public ResponseEntity<List<GarageSaleDto>> getFeaturedGarageSales() {
+        return ResponseEntity.ok(garageSaleService.getFeaturedGarageSales());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<GarageSaleDto>> searchGarageSales(
+            @RequestParam(name = "q", required = false)
+            @Size(max = 120, message = "Search query must be at most 120 characters")
+            String q) {
+        return ResponseEntity.ok(garageSaleService.searchGarageSalesByQuery(q));
+    }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<List<GarageSaleDto>> getNearbyGarageSales(
+            @RequestParam(name = "lat", required = false) Double lat,
+            @RequestParam(name = "lng", required = false) Double lng,
+            @RequestParam(name = "latitude", required = false) Double latitude,
+            @RequestParam(name = "longitude", required = false) Double longitude,
+            @RequestParam(name = "radius", required = false) @Min(value = 1, message = "radius must be at least 1") @Max(value = 200, message = "radius must be at most 200") Integer radius,
+            @RequestParam(name = "radiusKm", required = false) @Min(value = 1, message = "radiusKm must be at least 1") @Max(value = 200, message = "radiusKm must be at most 200") Integer radiusKm) {
+
+        Double resolvedLat = lat != null ? lat : latitude;
+        Double resolvedLng = lng != null ? lng : longitude;
+        Integer resolvedRadius = radiusKm != null ? radiusKm : radius;
+
+        if (resolvedLat == null || resolvedLng == null) {
+            throw new IllegalArgumentException("lat/lng (or latitude/longitude) query params are required");
+        }
+
+        return ResponseEntity.ok(garageSaleService.getNearbyGarageSales(resolvedLat, resolvedLng, resolvedRadius));
+    }
+
     @GetMapping("/mine")
     public ResponseEntity<List<GarageSaleDto>> getMyGarageSales(Authentication authentication) {
         return ResponseEntity.ok(garageSaleService.getGarageSalesBySeller(authentication.getName()));
@@ -36,17 +74,17 @@ public class GarageSaleController {
     }
 
     @PostMapping
-    public ResponseEntity<GarageSaleDto> createGarageSale(@RequestBody GarageSaleDto dto) {
+    public ResponseEntity<GarageSaleDto> createGarageSale(@Valid @RequestBody GarageSaleDto dto) {
         return ResponseEntity.ok(garageSaleService.createGarageSale(dto));
     }
 
     @PostMapping("/{id}/items")
-    public ResponseEntity<ItemDto> addItemToGarageSale(@PathVariable Long id, @RequestBody ItemDto itemDto) {
+    public ResponseEntity<ItemDto> addItemToGarageSale(@PathVariable Long id, @Valid @RequestBody ItemDto itemDto) {
         return ResponseEntity.ok(garageSaleService.addItemToGarageSale(id, itemDto));
     }
 
     @PutMapping("/{saleId}/items/{itemId}")
-    public ResponseEntity<ItemDto> updateItem(@PathVariable Long saleId, @PathVariable Long itemId, @RequestBody ItemDto itemDto) {
+    public ResponseEntity<ItemDto> updateItem(@PathVariable Long saleId, @PathVariable Long itemId, @Valid @RequestBody ItemDto itemDto) {
         return ResponseEntity.ok(garageSaleService.updateItem(saleId, itemId, itemDto));
     }
 
@@ -99,7 +137,7 @@ public class GarageSaleController {
     }
 
     @PutMapping("/{saleId}/items/{itemId}")
-    public ResponseEntity<ItemDto> updateItem(@PathVariable Long saleId, @PathVariable Long itemId, @RequestBody ItemDto itemDto) {
+    public ResponseEntity<ItemDto> updateItem(@PathVariable Long saleId, @PathVariable Long itemId, @Valid @RequestBody ItemDto itemDto) {
         return ResponseEntity.ok(garageSaleService.updateItem(saleId, itemId, itemDto));
     }
 

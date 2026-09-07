@@ -10,10 +10,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class AppointmentServiceTest {
@@ -46,12 +48,14 @@ public class AppointmentServiceTest {
         User buyer = new User(); buyer.setId(1L); buyer.setUsername("buyer");
         User seller = new User(); seller.setId(2L); seller.setUsername("seller");
         Home home = new Home(); home.setId(3L);
-        Sale sale = new Sale(); sale.setId(4L);
+        Sale sale = new Sale(); sale.setId(4L); sale.setSeller(seller); sale.setHome(home);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(buyer));
         when(userRepository.findById(2L)).thenReturn(Optional.of(seller));
         when(homeRepository.findById(3L)).thenReturn(Optional.of(home));
         when(saleRepository.findById(4L)).thenReturn(Optional.of(sale));
+        when(appointmentRepository.findBySaleIdAndAppointmentTime(eq(4L), any(LocalDateTime.class)))
+                .thenReturn(Collections.emptyList());
 
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(i -> {
             Appointment a = i.getArgument(0);
@@ -71,6 +75,50 @@ public class AppointmentServiceTest {
         assertNotNull(created);
         assertEquals(99L, created.getId());
         verify(appointmentRepository, times(1)).save(any(Appointment.class));
+    }
+
+    @Test
+    public void testCreateAppointmentRejectsSellerBookingOwnSale() {
+        User sellerBuyerSame = new User(); sellerBuyerSame.setId(1L); sellerBuyerSame.setUsername("same");
+        Home home = new Home(); home.setId(3L);
+        Sale sale = new Sale(); sale.setId(4L); sale.setSeller(sellerBuyerSame); sale.setHome(home);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sellerBuyerSame));
+        when(saleRepository.findById(4L)).thenReturn(Optional.of(sale));
+
+        AppointmentDto dto = new AppointmentDto();
+        dto.setBuyerId(1L);
+        dto.setSaleId(4L);
+        dto.setAppointmentTime(LocalDateTime.now().plusDays(1));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> appointmentService.createAppointment(dto));
+        assertTrue(ex.getMessage().toLowerCase().contains("cannot book"));
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    public void testCreateAppointmentRejectsFullSlot() {
+        User buyer = new User(); buyer.setId(1L); buyer.setUsername("buyer");
+        User seller = new User(); seller.setId(2L); seller.setUsername("seller");
+        Home home = new Home(); home.setId(3L);
+        Sale sale = new Sale(); sale.setId(4L); sale.setSeller(seller); sale.setHome(home);
+        sale.setMaxAppointmentsPerSlot(1);
+
+        LocalDateTime time = LocalDateTime.now().plusDays(1);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(buyer));
+        when(saleRepository.findById(4L)).thenReturn(Optional.of(sale));
+        when(appointmentRepository.findBySaleIdAndAppointmentTime(eq(4L), eq(time)))
+                .thenReturn(java.util.List.of(new Appointment()));
+
+        AppointmentDto dto = new AppointmentDto();
+        dto.setBuyerId(1L);
+        dto.setSaleId(4L);
+        dto.setAppointmentTime(time);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> appointmentService.createAppointment(dto));
+        assertTrue(ex.getMessage().toLowerCase().contains("slot"));
+        verify(appointmentRepository, never()).save(any());
     }
 
     @Test

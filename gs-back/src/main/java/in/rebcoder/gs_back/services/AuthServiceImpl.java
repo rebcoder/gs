@@ -3,6 +3,7 @@ package in.rebcoder.gs_back.services;
 import in.rebcoder.gs_back.dtos.JwtResponse;
 import in.rebcoder.gs_back.dtos.LoginDto;
 import in.rebcoder.gs_back.dtos.UserRegistrationDto;
+import in.rebcoder.gs_back.exception.UnauthorizedAccessException;
 import in.rebcoder.gs_back.models.User;
 import in.rebcoder.gs_back.repositories.UserRepository;
 import in.rebcoder.gs_back.utils.JwtTokenProvider;
@@ -29,7 +30,7 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
         // Check if user already exists
         if (userRepository.findByUsername(userRegistrationDto.getUsername()).isPresent() ||
             userRepository.findByEmail(userRegistrationDto.getEmail()) != null) {
-            throw new RuntimeException("User already exists");
+            throw new IllegalArgumentException("User already exists");
         }
 
         // Create new user
@@ -52,7 +53,7 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
     public JwtResponse loginUser(LoginDto loginDto) {
         // Authenticate user by verifying password directly to avoid circular bean dependency
         User user = userRepository.findByUsername(loginDto.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedAccessException("Invalid credentials"));
 
         if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
             // Generate JWT token without roles
@@ -60,7 +61,7 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
             return new JwtResponse(token);
         }
 
-        throw new RuntimeException("Invalid credentials");
+        throw new UnauthorizedAccessException("Invalid credentials");
     }
 
     @Override

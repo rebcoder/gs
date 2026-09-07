@@ -10,6 +10,10 @@ public interface GarageSaleService {
     
     List<GarageSaleDto> searchGarageSales(String city, String area, Double latitude, Double longitude, 
                                          Integer radiusKm, String category, String status);
+
+    List<GarageSaleDto> searchGarageSalesByQuery(String query);
+
+    List<GarageSaleDto> getFeaturedGarageSales();
     
     GarageSaleDto getGarageSaleById(Long id);
     
