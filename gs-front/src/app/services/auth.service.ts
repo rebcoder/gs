@@ -15,11 +15,18 @@ export interface RegisterRequest {
   password: string;
   firstName?: string;
   lastName?: string;
-  phone?: string;
+  // Must match the backend's UserRegistrationDto field name exactly - Jackson matches by name with
+  // no @JsonAlias, so a mismatch here silently drops the value instead of erroring.
+  phoneNumber?: string;
 }
 
 export interface AuthResponse {
   token: string;
+}
+
+export interface CurrentUser {
+  id: number | null;
+  username: string;
 }
 
 @Injectable({
@@ -63,14 +70,20 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken');
+    if (!token) return null;
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return null;
+    }
+    return token;
   }
 
   isAuthenticated(): boolean {
     return this.getToken() !== null;
   }
 
-  getCurrentUser(): any {
+  getCurrentUser(): CurrentUser | null {
     const token = this.getToken();
     if (!token) return null;
 
@@ -87,6 +100,19 @@ export class AuthService {
     }
   }
 
+  isTokenExpired(token?: string | null): boolean {
+    const resolvedToken = token ?? localStorage.getItem('authToken');
+    if (!resolvedToken) return true;
+    try {
+      const payload = JSON.parse(atob(resolvedToken.split('.')[1]));
+      if (!payload?.exp) return false;
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      return payload.exp <= nowSeconds;
+    } catch {
+      return true;
+    }
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred!';
 
@@ -97,6 +123,8 @@ export class AuthService {
       // Backend returned an unsuccessful response code
       if (error.error && typeof error.error === 'string') {
         errorMessage = error.error;
+      } else if (error.error && typeof error.error?.message === 'string') {
+        errorMessage = error.error.message;
       } else if (error.status === 401) {
         errorMessage = 'Invalid credentials';
       } else if (error.status === 400) {

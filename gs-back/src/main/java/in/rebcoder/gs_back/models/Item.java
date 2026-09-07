@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
-
 @Entity
 @Getter
 @Setter
@@ -31,9 +30,8 @@ public class Item {
     private boolean isSold;
     private boolean isAvailable = true;
     
-    // Images
-    @ElementCollection
-    private List<String> imageUrls;
+    // Primary image URL for card/list display
+    private String imageUrl;
     
     @ManyToOne
     @JoinColumn(name = "sale_id", nullable = false)
@@ -46,4 +44,3 @@ public class Item {
     @ManyToMany(mappedBy = "interestedItems")
     private List<Appointment> appointments; // Appointments interested in this item
 }
-

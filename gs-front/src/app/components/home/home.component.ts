@@ -1,13 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { BookAppointmentDialogComponent } from '../book-appointment-dialog/book-appointment-dialog.component';
+import { MarketplaceService } from '../../services/marketplace.service';
+import { ProfileService } from '../../services/profile.service';
+import { MarketplaceSale } from '../../models/marketplace.models';
+import { SaleCardComponent } from '../ui/sale-card/sale-card.component';
+import { EmptyStateComponent } from '../ui/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-home',
@@ -15,95 +17,40 @@ import { BookAppointmentDialogComponent } from '../book-appointment-dialog/book-
   imports: [
     CommonModule,
     RouterLink,
-    MatCardModule,
-    MatButtonModule,
     MatIconModule,
-    MatChipsModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    SaleCardComponent,
+    EmptyStateComponent
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
+  featuredSales: MarketplaceSale[] = [];
+  featuredLoading = true;
+  weekendNearbyCount = 0;
+
+  private preferredCity: string | null = null;
 
   constructor(
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private marketplaceService: MarketplaceService,
+    private profileService: ProfileService
   ) {}
 
-  featuredSales = [
-    {
-      id: 1,
-      saleName: "Weekend Furniture Sale",
-      title: "Weekend Furniture Sale",
-      area: "Downtown Area",
-      city: "DemoCity",
-      latitude: 12.34,
-      longitude: 56.78,
-      description: "Quality furniture at great prices",
-      category: "Furniture",
-      location: "Downtown Area, DemoCity",
-      date: "2024-12-28",
-      time: "9:00 AM - 5:00 PM",
-      items: [
-        { id: 1, name: "Vintage Lamp", price: 25.00, category: "HOME_DECOR" },
-        { id: 2, name: "Wooden Chair", price: 40.00, category: "FURNITURE" }
-      ]
-    },
-    {
-      id: 2,
-      saleName: "Electronics & Gadgets",
-      title: "Electronics & Gadgets",
-      area: "Westside Neighborhood",
-      city: "DemoCity",
-      latitude: 12.35,
-      longitude: 56.79,
-      description: "Latest electronics and gadgets",
-      category: "Electronics",
-      location: "Westside Neighborhood, DemoCity",
-      date: "2024-12-29",
-      time: "10:00 AM - 4:00 PM",
-      items: [
-        { id: 3, name: "Wireless Headphones", price: 75.00, category: "ELECTRONICS" },
-        { id: 4, name: "Smart Watch", price: 150.00, category: "ELECTRONICS" }
-      ]
-    },
-    {
-      id: 3,
-      saleName: "Vintage Collectibles",
-      title: "Vintage Collectibles",
-      area: "Historic District",
-      city: "DemoCity",
-      latitude: 12.36,
-      longitude: 56.80,
-      description: "Rare vintage collectibles",
-      category: "Collectibles",
-      location: "Historic District, DemoCity",
-      date: "2024-12-28",
-      time: "11:00 AM - 6:00 PM",
-      items: [
-        { id: 5, name: "Antique Clock", price: 120.00, category: "ANTIQUES" },
-        { id: 6, name: "Vintage Camera", price: 200.00, category: "COLLECTIBLES" }
-      ]
-    }
-  ];
+  ngOnInit(): void {
+    this.loadFeaturedSales();
+    this.loadWeekendNearbyBanner();
+  }
 
-  categories = [
-    { name: 'Furniture', icon: 'chair', count: 45 },
-    { name: 'Electronics', icon: 'devices', count: 32 },
-    { name: 'Clothing', icon: 'checkroom', count: 67 },
-    { name: 'Books', icon: 'book', count: 23 },
-    { name: 'Toys', icon: 'toys', count: 18 },
-    { name: 'Sports', icon: 'sports_soccer', count: 29 }
-  ];
-
-  bookAppointment(sale: any) {
+  bookAppointment(sale: MarketplaceSale): void {
     const dialogRef = this.dialog.open(BookAppointmentDialogComponent, {
       width: '700px',
       maxWidth: '90vw',
       data: {
-        sale: sale,
+        sale: sale.raw,
         saleId: sale.id
       },
       disableClose: false
@@ -117,5 +64,86 @@ export class HomeComponent {
         });
       }
     });
+  }
+
+  private loadFeaturedSales(): void {
+    this.featuredLoading = true;
+    this.marketplaceService.getFeaturedSales().subscribe({
+      next: (sales) => {
+        this.featuredSales = sales.slice(0, 6);
+        this.featuredLoading = false;
+      },
+      error: () => {
+        this.featuredSales = [];
+        this.featuredLoading = false;
+      }
+    });
+  }
+
+  private loadWeekendNearbyBanner(): void {
+    this.profileService.getMyProfile().subscribe({
+      next: (profile) => {
+        this.preferredCity = profile?.preferredCity || null;
+        if (profile?.preferredLatitude != null && profile?.preferredLongitude != null) {
+          this.marketplaceService
+            .getNearbySales(profile.preferredLatitude, profile.preferredLongitude, profile.searchRadiusKm || 20)
+            .subscribe({
+              next: (sales) => {
+                this.weekendNearbyCount = this.countWeekendSales(sales);
+              },
+              error: () => {
+                this.loadWeekendFallback();
+              }
+            });
+          return;
+        }
+        this.loadWeekendFallback();
+      },
+      error: () => this.loadWeekendFallback()
+    });
+  }
+
+  private loadWeekendFallback(): void {
+    this.marketplaceService.getAllSales().subscribe({
+      next: (sales) => {
+        let source = sales;
+        if (this.preferredCity) {
+          source = source.filter((sale) =>
+            (sale.city || '').toLowerCase().includes(this.preferredCity!.toLowerCase())
+          );
+        }
+        this.weekendNearbyCount = this.countWeekendSales(source);
+      },
+      error: () => {
+        this.weekendNearbyCount = 0;
+      }
+    });
+  }
+
+  private countWeekendSales(sales: MarketplaceSale[]): number {
+    return sales.filter((sale) => sale.date && this.isThisWeekend(sale.date)).length;
+  }
+
+  private isThisWeekend(rawDate: string): boolean {
+    const target = new Date(rawDate);
+    if (Number.isNaN(target.getTime())) return false;
+    target.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const day = today.getDay(); // Sun=0, Sat=6
+
+    const saturday = new Date(today);
+    if (day === 6) {
+      // today is Saturday
+    } else if (day === 0) {
+      saturday.setDate(saturday.getDate() - 1);
+    } else {
+      saturday.setDate(saturday.getDate() + (6 - day));
+    }
+    const sunday = new Date(saturday);
+    sunday.setDate(sunday.getDate() + 1);
+
+    return target.getTime() === saturday.getTime() || target.getTime() === sunday.getTime();
   }
 }

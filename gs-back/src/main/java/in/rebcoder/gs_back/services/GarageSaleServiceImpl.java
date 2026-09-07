@@ -12,18 +12,27 @@ import in.rebcoder.gs_back.repositories.AppointmentRepository;
 import in.rebcoder.gs_back.repositories.HomeRepository;
 import in.rebcoder.gs_back.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class GarageSaleServiceImpl implements GarageSaleService {
+
+    private static final Logger log = LoggerFactory.getLogger(GarageSaleServiceImpl.class);
 
     private final SaleRepository saleRepository;
     private final HomeRepository homeRepository;
@@ -32,38 +41,78 @@ public class GarageSaleServiceImpl implements GarageSaleService {
     private final in.rebcoder.gs_back.repositories.ItemRepository itemRepository;
 
     @Override
+    @Cacheable(cacheNames = "garageSales", key = "{#city,#area,#latitude,#longitude,#radiusKm,#category,#status}")
     public List<GarageSaleDto> searchGarageSales(String city, String area, Double latitude, Double longitude,
                                                  Integer radiusKm, String category, String status) {
         try {
             List<Sale> sales = saleRepository.findAll();
-            System.out.println("DEBUG: Found " + sales.size() + " sales in database");
+            log.debug("Found {} sales in database", sales.size());
             List<GarageSaleDto> dtos = sales.stream().map(this::toDto).collect(Collectors.toList());
-            System.out.println("DEBUG: Converted to " + dtos.size() + " DTOs");
+            log.debug("Converted to {} DTOs", dtos.size());
             return dtos;
         } catch (Exception e) {
-            System.err.println("ERROR in searchGarageSales: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error in searchGarageSales: {}", e.getMessage(), e);
             throw e;
         }
     }
 
     @Override
+    @Cacheable(cacheNames = "garageSalesSearch", key = "#query == null ? '' : #query.toLowerCase()")
+    public List<GarageSaleDto> searchGarageSalesByQuery(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return searchGarageSales(null, null, null, null, null, null, null);
+        }
+
+        String needle = query.toLowerCase(Locale.ROOT).trim();
+        return saleRepository.findAll().stream()
+                .map(this::toDto)
+                .filter(dto -> matchesQuery(dto, needle))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(cacheNames = "garageSalesFeatured", key = "'all'")
+    public List<GarageSaleDto> getFeaturedGarageSales() {
+        List<GarageSaleDto> featured = saleRepository.findAll().stream()
+                .filter(Sale::isFeatured)
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
+        if (!featured.isEmpty()) {
+            return featured;
+        }
+
+        // Fallback for empty data: show latest 3 sales so homepage isn't blank.
+        return saleRepository.findAll().stream()
+                .sorted(Comparator.comparing(Sale::getId, Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(3)
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(cacheNames = "garageSaleById", key = "#id")
     public GarageSaleDto getGarageSaleById(Long id) {
         try {
-            System.out.println("DEBUG: Looking for sale with ID: " + id);
-            Sale sale = saleRepository.findById(id).orElseThrow(() -> new RuntimeException("Sale not found"));
-            System.out.println("DEBUG: Found sale: " + sale.getSaleName());
+            log.debug("Looking for sale with ID: {}", id);
+            Sale sale = saleRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sale not found"));
+            log.debug("Found sale: {}", sale.getSaleName());
             GarageSaleDto dto = toDto(sale);
-            System.out.println("DEBUG: Converted to DTO: " + dto.getSaleName());
+            log.debug("Converted to DTO: {}", dto.getSaleName());
             return dto;
         } catch (Exception e) {
-            System.err.println("ERROR in getGarageSaleById: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error in getGarageSaleById: {}", e.getMessage(), e);
             throw e;
         }
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "garageSales", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesNearby", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesSearch", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesFeatured", allEntries = true)
+    })
     public GarageSaleDto createGarageSale(GarageSaleDto garageSaleDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
@@ -85,6 +134,7 @@ public class GarageSaleServiceImpl implements GarageSaleService {
         sale.setCity(garageSaleDto.getCity() != null ? garageSaleDto.getCity() : home.getCity());
         sale.setLatitude(garageSaleDto.getLatitude() != null ? garageSaleDto.getLatitude() : home.getLatitude());
         sale.setLongitude(garageSaleDto.getLongitude() != null ? garageSaleDto.getLongitude() : home.getLongitude());
+        sale.setFeatured(Boolean.TRUE.equals(garageSaleDto.getFeatured()));
         int maxPerSlot = garageSaleDto.getMaxAppointmentsPerSlot() != null ? garageSaleDto.getMaxAppointmentsPerSlot() : 3;
         sale.setMaxAppointmentsPerSlot(Math.max(1, maxPerSlot));
         sale.setSeller(user);
@@ -95,8 +145,15 @@ public class GarageSaleServiceImpl implements GarageSaleService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "garageSaleById", key = "#id"),
+            @CacheEvict(cacheNames = "garageSales", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesNearby", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesSearch", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesFeatured", allEntries = true)
+    })
     public GarageSaleDto updateGarageSale(Long id, GarageSaleDto garageSaleDto) {
-        Sale sale = saleRepository.findById(id).orElseThrow(() -> new RuntimeException("Sale not found"));
+        Sale sale = saleRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sale not found"));
         sale.setSaleName(garageSaleDto.getSaleName());
         sale.setDescription(garageSaleDto.getDescription());
         if (garageSaleDto.getSaleDate() != null) sale.setSaleDate(garageSaleDto.getSaleDate());
@@ -104,6 +161,9 @@ public class GarageSaleServiceImpl implements GarageSaleService {
         if (garageSaleDto.getEndTime() != null) sale.setEndTime(garageSaleDto.getEndTime());
         sale.setArea(garageSaleDto.getArea());
         sale.setCity(garageSaleDto.getCity());
+        if (garageSaleDto.getFeatured() != null) {
+            sale.setFeatured(garageSaleDto.getFeatured());
+        }
         if (garageSaleDto.getMaxAppointmentsPerSlot() != null) {
             sale.setMaxAppointmentsPerSlot(garageSaleDto.getMaxAppointmentsPerSlot());
         }
@@ -112,11 +172,25 @@ public class GarageSaleServiceImpl implements GarageSaleService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "garageSaleById", key = "#id"),
+            @CacheEvict(cacheNames = "garageSales", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesNearby", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesSearch", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesFeatured", allEntries = true)
+    })
     public void deleteGarageSale(Long id) {
         saleRepository.deleteById(id);
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "garageSaleById", key = "#id"),
+            @CacheEvict(cacheNames = "garageSales", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesNearby", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesSearch", allEntries = true),
+            @CacheEvict(cacheNames = "garageSalesFeatured", allEntries = true)
+    })
     public void deleteGarageSale(Long id, String username) {
         Sale sale = saleRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sale not found"));
         var user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -145,13 +219,14 @@ public class GarageSaleServiceImpl implements GarageSaleService {
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setPrice(itemDto.getPrice());
+        item.setImageUrl(itemDto.getImageUrl());
         if (itemDto.getCategory() != null) {
             try {
                 item.setCategory(in.rebcoder.gs_back.models.ItemCategory.valueOf(itemDto.getCategory()));
             } catch (Exception ignored) {}
         }
         // associate sale
-        Sale sale = saleRepository.findById(saleId).orElseThrow(() -> new RuntimeException("Sale not found"));
+        Sale sale = saleRepository.findById(saleId).orElseThrow(() -> new ResourceNotFoundException("Sale not found"));
         item.setSale(sale);
         // associate home if provided
         if (itemDto.getHomeId() != null) {
@@ -160,21 +235,23 @@ public class GarageSaleServiceImpl implements GarageSaleService {
         in.rebcoder.gs_back.repositories.ItemRepository repo = (in.rebcoder.gs_back.repositories.ItemRepository) itemRepository;
         repo.save(item);
         itemDto.setId(item.getId());
+        itemDto.setImageUrl(item.getImageUrl());
         return itemDto;
     }
 
     @Override
     public ItemDto updateItem(Long saleId, Long itemId, ItemDto itemDto) {
         in.rebcoder.gs_back.models.Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
         if (saleId != null) {
             Sale sale = saleRepository.findById(saleId)
-                    .orElseThrow(() -> new RuntimeException("Sale not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Sale not found"));
             item.setSale(sale);
         }
         if (itemDto.getName() != null) item.setName(itemDto.getName());
         if (itemDto.getDescription() != null) item.setDescription(itemDto.getDescription());
         if (itemDto.getPrice() != null) item.setPrice(itemDto.getPrice());
+        if (itemDto.getImageUrl() != null) item.setImageUrl(itemDto.getImageUrl());
         if (itemDto.getCategory() != null) {
             try { item.setCategory(in.rebcoder.gs_back.models.ItemCategory.valueOf(itemDto.getCategory())); } catch (Exception ignored) {}
         }
@@ -183,6 +260,7 @@ public class GarageSaleServiceImpl implements GarageSaleService {
 
         itemRepository.save(item);
         itemDto.setId(item.getId());
+        itemDto.setImageUrl(item.getImageUrl());
         itemDto.setSaleId(item.getSale() != null ? item.getSale().getId() : null);
         return itemDto;
     }
@@ -190,9 +268,9 @@ public class GarageSaleServiceImpl implements GarageSaleService {
     @Override
     public void removeItemFromGarageSale(Long saleId, Long itemId) {
         in.rebcoder.gs_back.models.Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
         if (saleId != null && item.getSale() != null && !item.getSale().getId().equals(saleId)) {
-            throw new RuntimeException("Item does not belong to the provided sale");
+            throw new IllegalArgumentException("Item does not belong to the provided sale");
         }
         itemRepository.delete(item);
     }
@@ -203,8 +281,33 @@ public class GarageSaleServiceImpl implements GarageSaleService {
     }
 
     @Override
+    @Cacheable(cacheNames = "garageSalesNearby", key = "{#latitude,#longitude,#radiusKm}")
     public List<GarageSaleDto> getNearbyGarageSales(Double latitude, Double longitude, Integer radiusKm) {
-        return searchGarageSales(null, null, latitude, longitude, radiusKm, null, null);
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("Latitude and longitude are required");
+        }
+        int safeRadiusKm = radiusKm == null ? 10 : Math.max(1, radiusKm);
+
+        return saleRepository.findAll().stream()
+                .filter(sale -> sale.getLatitude() != null && sale.getLongitude() != null)
+                .filter(sale -> haversineDistanceKm(latitude, longitude, sale.getLatitude(), sale.getLongitude()) <= safeRadiusKm)
+                .sorted(Comparator.comparingDouble(sale -> haversineDistanceKm(
+                        latitude, longitude, sale.getLatitude(), sale.getLongitude()
+                )))
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    private double haversineDistanceKm(double lat1, double lng1, double lat2, double lng2) {
+        final double earthRadiusKm = 6371.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1))
+                * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
     }
 
     private Home resolveSellerHome(in.rebcoder.gs_back.models.User user, GarageSaleDto garageSaleDto) {
@@ -242,6 +345,7 @@ public class GarageSaleServiceImpl implements GarageSaleService {
         dto.setCity(sale.getCity());
         dto.setLatitude(sale.getLatitude());
         dto.setLongitude(sale.getLongitude());
+        dto.setFeatured(sale.isFeatured());
         dto.setMaxAppointmentsPerSlot(sale.getMaxAppointmentsPerSlot());
         dto.setSellerId(sale.getSeller() != null ? sale.getSeller().getId() : null);
         dto.setHomeId(sale.getHome() != null ? sale.getHome().getId() : null);
@@ -258,6 +362,7 @@ public class GarageSaleServiceImpl implements GarageSaleService {
                 idto.setCondition(it.getCondition());
                 idto.setBrand(it.getBrand());
                 idto.setModel(it.getModel());
+                idto.setImageUrl(it.getImageUrl());
                 idto.setAvailable(it.isAvailable());
                 idto.setSold(it.isSold());
                 idto.setSaleId(it.getSale() != null ? it.getSale().getId() : null);
@@ -266,5 +371,23 @@ public class GarageSaleServiceImpl implements GarageSaleService {
             }).collect(Collectors.toList()));
         }
         return dto;
+    }
+
+    private boolean matchesQuery(GarageSaleDto dto, String needle) {
+        if (containsIgnoreCase(dto.getSaleName(), needle)) return true;
+        if (containsIgnoreCase(dto.getDescription(), needle)) return true;
+        if (containsIgnoreCase(dto.getArea(), needle)) return true;
+        if (containsIgnoreCase(dto.getCity(), needle)) return true;
+        if (dto.getItems() == null) return false;
+
+        return dto.getItems().stream().anyMatch(item ->
+                containsIgnoreCase(item.getName(), needle)
+                        || containsIgnoreCase(item.getDescription(), needle)
+                        || containsIgnoreCase(item.getCategory(), needle)
+        );
+    }
+
+    private boolean containsIgnoreCase(String value, String needle) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
     }
 }

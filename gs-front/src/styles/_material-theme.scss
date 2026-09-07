@@ -1,0 +1,59 @@
+// Angular Material 20 theme wired to the GarageSale brand tokens
+// (--primary-color coral / --secondary-color teal, see src/styles.scss).
+//
+// Approach: Angular Material 20 ships the newer M3 "system tokens" API
+// (`mat.theme()` from '@angular/material/core/tokens/_system.scss`, forwarded
+// as `mat.theme`). Rather than the older `mat.define-theme()` +
+// `mat.all-component-themes()` pipeline (which requires an explicit
+// `@include` per component), `mat.theme()` just emits `--mat-sys-*` CSS custom
+// properties at a selector; every M3-era Material component already reads its
+// styling from those variables with sensible fallbacks baked in, so a single
+// `@include mat.theme(...)` re-skins dialogs/menus/snackbars/the datepicker/etc.
+// with no per-component wiring. This mirrors exactly what
+// `ng generate @angular/material:m3-theme` scaffolds for a v20 app (see
+// node_modules/@angular/material/schematics/ng-add/theming/create-custom-theme.js).
+//
+// The tonal palettes below were generated from our *exact* brand hex values
+// using that same tooling:
+//   ng generate @angular/material:m3-theme --primary-color="#ff5a5f" \
+//     --tertiary-color="#11a38e" --error-color="#dc2626" --directory="src/styles/"
+// which runs Google's real Material Color Utilities (HCT) algorithm to derive
+// harmonized surfaces/containers/neutrals/error tones -- see ./_theme-colors.scss.
+//
+// One wrinkle: M3 assigns the "primary"/"tertiary" system roles a contrast-safe
+// *tone* (tone 40 in light mode) rather than the literal source hue, so used
+// as-is the generated theme's primary would render as a dark brick red, not
+// our vivid coral. Since the task calls for Material's primary/tertiary to
+// visually match --primary-color/--secondary-color, we pin just those two
+// roles (and their `on-*` pairs) back to the literal brand tokens with
+// `mat.theme-overrides()` while keeping every other generated value (which is
+// already harmonized off the true brand hue) as-is.
+@use '@angular/material' as mat;
+@use './theme-colors' as brand;
+
+:root {
+  // This app does not offer a dark-mode toggle; the rest of the design system
+  // (neutral scale, gradients, etc.) is light-only, so pin Material to light
+  // rather than letting `color-scheme` auto-switch with the OS and mismatch.
+  color-scheme: light;
+
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: brand.$primary-palette,
+      tertiary: brand.$tertiary-palette,
+    ),
+    typography: (
+      plain-family: '"Manrope", "Avenir Next", "Segoe UI", sans-serif',
+      brand-family: '"Manrope", "Avenir Next", "Segoe UI", sans-serif',
+    ),
+    density: 0,
+  ));
+
+  @include mat.theme-overrides((
+    primary: var(--primary-color),
+    on-primary: #ffffff,
+    tertiary: var(--secondary-color),
+    on-tertiary: #ffffff,
+  ));
+}

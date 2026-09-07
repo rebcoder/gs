@@ -50,5 +50,7 @@ public class Sale {
     private String city;
     private Double latitude;
     private Double longitude;
-}
 
+    // Promoted sale shown on homepage featured section
+    private boolean featured = false;
+}

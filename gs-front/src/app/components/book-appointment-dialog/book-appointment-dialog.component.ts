@@ -8,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -37,7 +36,6 @@ export interface AppointmentDialogData {
     MatButtonModule,
     MatSnackBarModule,
     MatIconModule,
-    MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
@@ -91,26 +89,33 @@ export interface AppointmentDialogData {
                   Please select a date
                 </mat-error>
               </mat-form-field>
+            </div>
 
-              <mat-form-field appearance="outline" class="time-field">
-                <mat-label>Preferred Time</mat-label>
-                <mat-select formControlName="preferredTime" placeholder="Select time">
-                  <mat-option *ngFor="let slot of availableTimeSlots" [value]="slot.value">
-                    {{slot.label}}
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="appointmentForm.get('preferredTime')?.hasError('required')">
-                  Please select a time
-                </mat-error>
-                <mat-hint *ngIf="slotsLeft !== null && !slotFull" class="slots-info">
-                  <mat-icon>info</mat-icon>
-                  {{slotsLeft}} slots left for this time
-                </mat-hint>
-                <mat-hint *ngIf="slotFull" class="slots-full">
-                  <mat-icon>warning</mat-icon>
-                  This time slot is full
-                </mat-hint>
-              </mat-form-field>
+            <div class="slot-selection">
+              <p class="slot-label">Available time slots</p>
+              <div class="slot-grid">
+                <button
+                  *ngFor="let slot of availableTimeSlots"
+                  type="button"
+                  class="slot-button"
+                  [class.selected]="appointmentForm.get('preferredTime')?.value === slot.value"
+                  (click)="selectTimeSlot(slot.value)">
+                  {{ slot.label }}
+                </button>
+              </div>
+
+              <p class="slot-error" *ngIf="appointmentForm.get('preferredTime')?.invalid && appointmentForm.get('preferredTime')?.touched">
+                Please select a time slot.
+              </p>
+
+              <div *ngIf="slotsLeft !== null && !slotFull" class="slots-info">
+                <mat-icon>info</mat-icon>
+                {{slotsLeft}} slots left for this time
+              </div>
+              <div *ngIf="slotFull" class="slots-full">
+                <mat-icon>warning</mat-icon>
+                This time slot is full
+              </div>
             </div>
           </div>
 
@@ -301,12 +306,58 @@ export interface AppointmentDialogData {
         }
       }
 
-      .date-field, .time-field {
+      .date-field {
         width: 100%;
       }
 
       .notes-field {
         width: 100%;
+      }
+
+      .slot-selection {
+        margin-top: 12px;
+      }
+
+      .slot-label {
+        margin: 0 0 10px 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .slot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 10px;
+      }
+
+      .slot-button {
+        border: 1px solid #d1d5db;
+        background: #fff;
+        border-radius: 10px;
+        padding: 9px 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .slot-button:hover {
+        border-color: #9ca3af;
+        background: #f9fafb;
+      }
+
+      .slot-button.selected {
+        background: #111827;
+        border-color: #111827;
+        color: #fff;
+      }
+
+      .slot-error {
+        margin: 8px 0 0;
+        font-size: 0.8rem;
+        color: #d32f2f;
       }
 
       .slots-info {
@@ -449,6 +500,29 @@ export class BookAppointmentDialogComponent implements OnInit {
     this.generateSlotsFromSale();
   }
 
+  /**
+   * Formats a Date's LOCAL wall-clock components (no timezone conversion) as `YYYY-MM-DD`.
+   * `date.toISOString()` converts to UTC first, which shifts the calendar day for any timezone
+   * other than UTC+0 (e.g. picking Sept 14 in UTC+5:30 produces "2026-09-13" via toISOString()) -
+   * the backend's Sale.saleDate is a naive LocalDate with no timezone, so it must be compared
+   * against the same local date the user actually saw and picked, not a UTC-shifted one.
+   */
+  private toLocalDateString(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  /**
+   * Formats a Date's LOCAL wall-clock components as a naive `YYYY-MM-DDTHH:mm:ss` string, matching
+   * the backend's timezone-naive LocalDateTime field - see toLocalDateString() above for why
+   * `.toISOString()` is wrong here (it would silently shift the booked hour, or even the day, by the
+   * browser's UTC offset).
+   */
+  private toLocalDateTimeString(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${this.toLocalDateString(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
   private initializeForm() {
     this.appointmentForm = this.fb.group({
       preferredDate: ['', Validators.required],
@@ -470,6 +544,11 @@ export class BookAppointmentDialogComponent implements OnInit {
     return this.appointmentForm.get(`interestedItems.item_${itemId}`);
   }
 
+  selectTimeSlot(value: string): void {
+    this.appointmentForm.get('preferredTime')?.setValue(value);
+    this.appointmentForm.get('preferredTime')?.markAsTouched();
+  }
+
   private checkSlotAvailability() {
     const date = this.appointmentForm.get('preferredDate')?.value;
     const time = this.appointmentForm.get('preferredTime')?.value;
@@ -480,7 +559,7 @@ export class BookAppointmentDialogComponent implements OnInit {
       return;
     }
 
-    const dateIso = new Date(date).toISOString().split('T')[0];
+    const dateIso = this.toLocalDateString(new Date(date));
 
     this.appointmentService.getSlotCount(this.data.saleId, time, dateIso).subscribe({
       next: (count: any) => {
@@ -546,7 +625,7 @@ export class BookAppointmentDialogComponent implements OnInit {
 
       const appointmentData = {
         saleId: this.data.saleId,
-        appointmentTime: appointmentTime.toISOString(),
+        appointmentTime: this.toLocalDateTimeString(appointmentTime),
         timeSlot: formValue.preferredTime,
         notes: formValue.notes || '',
         sellerId: this.data.sale.sellerId || this.data.sale.seller?.id,

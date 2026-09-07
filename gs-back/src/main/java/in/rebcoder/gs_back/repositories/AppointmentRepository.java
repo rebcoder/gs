@@ -16,6 +16,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByHomeAndAppointmentTime(Home home, LocalDateTime appointmentTime);
 
     List<Appointment> findBySeller(User seller);
+    List<Appointment> findBySellerAndSaleId(User seller, Long saleId);
 
     List<Appointment> findBySaleId(Long saleId);
 

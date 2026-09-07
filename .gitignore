@@ -8,6 +8,8 @@ gs-front/node_modules/
 gs-front/dist/
 gs-front/.angular/
 gs-front/coverage/
+gs-front/playwright-report/
+gs-front/test-results/
 
 # Backend artifacts
 gs-back/target/
@@ -17,3 +19,6 @@ gs-back/target/
 *.pid
 tmp/
 *.tmp
+
+# ORCVIZ session recordings
+.orcviz/

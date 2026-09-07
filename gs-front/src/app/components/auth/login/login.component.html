@@ -32,7 +32,7 @@
 
       <div class="form-options">
         <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
-        <a href="#" class="forgot-password">Forgot password?</a>
+        <span class="forgot-password" aria-disabled="true" title="Coming soon">Forgot password? (Coming soon)</span>
       </div>
 
       <button type="submit" mat-raised-button color="primary" class="login-button" [disabled]="loginForm.invalid || isLoading">
@@ -44,20 +44,6 @@
 
     <div class="login-footer">
       <p>Don't have an account? <a routerLink="/register">Sign up</a></p>
-    </div>
-
-    <div class="social-login">
-      <p class="divider">Or continue with</p>
-      <div class="social-buttons">
-        <button mat-stroked-button class="social-btn google">
-          <mat-icon>google</mat-icon>
-          Google
-        </button>
-        <button mat-stroked-button class="social-btn facebook">
-          <mat-icon>facebook</mat-icon>
-          Facebook
-        </button>
-      </div>
     </div>
 
     <!-- Demo Credentials Section -->
